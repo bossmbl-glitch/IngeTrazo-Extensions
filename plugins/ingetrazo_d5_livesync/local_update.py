@@ -19,9 +19,15 @@ def export_roots(scene,keys,state,exporter,target,base_revision,base_hash,policy
     snapshot.groups=[g for g,r in zip(scene.groups,rows) if r['key'] in keys]
     snapshot.layers=scene.layers
     used=set()
+    def material_references(value):
+        if isinstance(value,dict):
+            if isinstance(value.get('mat'),str):used.add(value['mat'])
+            for item in value.values():material_references(item)
+        elif isinstance(value,(list,tuple)):
+            for item in value:material_references(item)
     def references(g):
-        used.add((getattr(g,'material',None) or {}).get('mat'))
-        used.update(f.attrs.get('mat') for f in g.mesh.faces)
+        material_references(getattr(g,'material',None))
+        for f in g.mesh.faces:material_references(f.attrs)
         for c in g.children:references(c)
     for g in snapshot.groups:references(g)
     snapshot.materials={k:v for k,v in scene.materials.items() if k in used}

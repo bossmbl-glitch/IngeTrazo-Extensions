@@ -1,0 +1,14 @@
+IngeTrazo-D5-LiveSync 0.9.10-test.1 測試安裝包
+日期：2026-11-12；目標 Windows x64／IngeTrazo 0.6.0／既有 Blender 與官方 D5 Sync。
+狀態：本地自動化測試通過，Windows／D5 實機待使用者驗收；不是正式發布版。
+
+1. 在現有 IGZ 與 D5 專案的備份副本驗收。先停止同步，關閉 IngeTrazo。
+2. 將 %APPDATA%\IngeTrazo\plugins\ingetrazo_d5_livesync 整個資料夾備份到 plugins 以外的位置，標示 0.9.9。保留現有 D5 專案、固定物件／材質關聯與 %LOCALAPPDATA%\IngeTrazoD5Bridge；不刪除這些資料。
+3. 從測試 ZIP 把 ingetrazo_d5_livesync 資料夾複製到 %APPDATA%\IngeTrazo\plugins\，取代同名外掛資料夾；不要額外多套一層 ZIP 名稱。此包不含 IngeTrazo、Blender、D5 或官方 SDK，也不更換材質工作室。
+4. 重開 IngeTrazo，設定／診斷確認 bridge 版本為 0.9.10-test.1，沿用既有 Blender 與 D5 路徑。
+5. 保留原有圖層設定；開始同步，先等待一輪完整同步成功。開啟「快速移動／旋轉更新」及「局部形狀／材質更新」才能驗收兩種最佳化路徑；停止同步後才能修改勾選。
+6. 按 01_驗收清單.txt 測試。一般群組移動預期顯示局部更新；有獨立位置矩陣的元件可顯示快速位置更新。
+7. 無變動時按一般「更新」，若內容與已確認基準相同應略過。需要強制再送請按「完整更新一次」。
+8. 發生退回時，先匯出效能診斷包；不要刪除快照／關聯資料。附上動作、畫面問題與診斷 ZIP，驗收後才決定是否正式發布。
+
+回復 0.9.9：停止同步並關閉 IngeTrazo，把測試外掛資料夾移至 plugins 外，再還原第 2 步的完整 0.9.9 資料夾。重新開啟備份測試專案並完整同步一次。測試過程不應覆蓋唯一一份正式 IGZ／D5 專案。

@@ -311,12 +311,11 @@ class SyncPanel(QWidget):
         self.log_file=(self.session.directory/'worker.log').open('a',encoding='utf-8')
         self.process=launch(clean_path(self.blender.text()),Path(__file__).parent/'worker.py',self.session.directory,self.log_file)
         self.running=True;self.checking=False;self.dirty_at=None
-        if self.fast_motion.isChecked() or self.partial_updates.isChecked():
-            from .host_motion import MotionCertificate
-            self.motion_certificate=MotionCertificate(self.app)
-            self.session.motion_certificate=self.motion_certificate
-            self.session.partial_enabled=self.partial_updates.isChecked()
-            self.session.motion_enabled=self.fast_motion.isChecked()
+        from .host_motion import MotionCertificate
+        self.motion_certificate=MotionCertificate(self.app)
+        self.session.motion_certificate=self.motion_certificate
+        self.session.partial_enabled=self.partial_updates.isChecked()
+        self.session.motion_enabled=self.fast_motion.isChecked()
         self.status.setText('檢查通過，正在連接 D5；首次可能需要在 D5 選擇模型關聯。')
         self.buttons()
 
@@ -330,11 +329,24 @@ class SyncPanel(QWidget):
         token = self.schedule.begin()
         self.exporting = True
         publishing_revision=self.session.revision if replace_pending else self.session.revision+1
-        self.progress.begin_revision(publishing_revision)
-        self.source_recorder.event('snapshot_begin',revision=publishing_revision)
+        trigger=('receiver_need_full' if replace_pending else 'manual_full' if self.force_full_next
+                 else 'manual_update' if token[1] else 'initial' if not self.session.revision else 'document_changed')
+        self.source_recorder.event('sync_requested',revision=publishing_revision,trigger=trigger,
+                                   generation=token[0],published_generation=self.schedule.published_generation,
+                                   content_version=getattr(self.app.scene,'content_version',None))
+        def begin_export():
+            self.progress.begin_revision(publishing_revision)
+            self.source_recorder.event('snapshot_begin',revision=publishing_revision,trigger=trigger)
         try:
-            result = self.session.publish(self.app.scene, save_scene,force_full=self.force_full_next,replace_pending=replace_pending)
+            result = self.session.publish(self.app.scene, save_scene,force_full=self.force_full_next,replace_pending=replace_pending,on_export=begin_export)
             self.force_full_next=False
+            result.setdefault('sync_decision',{})['trigger']=trigger
+            if result.get('kind')=='skipped':
+                self.source_recorder.event('sync_skipped',revision=result['revision'],**result['sync_decision'])
+                self.source_recorder.snapshot('sync-decision-latest.json',{'revision':result['revision'],**result['sync_decision']})
+                self.schedule.published(token)
+                self.status.setText('內容與已確認版本相同，已略過重複傳送。')
+                return result
             self.source_recorder.event('snapshot_published',revision=result['revision'],seconds=result.get('export_seconds'),bytes=result.get('bytes'),kind=result.get('kind'),fallback_reason=result.get('fast_fallback_reason'))
             decision=result.get('sync_decision',{})
             self.source_recorder.snapshot('sync-decision-latest.json',{'revision':result['revision'],**decision})

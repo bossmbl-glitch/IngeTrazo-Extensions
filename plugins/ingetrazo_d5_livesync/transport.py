@@ -69,7 +69,7 @@ class SnapshotSession:
         self.motion_candidate_revision=0;self.motion_base_hash=None;self.motion_protocol=False;self.last_fallback_reason='first_full_sync'
         self.partial_enabled=False;self.partial_protocol=False;self.motion_enabled=True
         write_json(self.directory / "owner.json", {
-            "plugin": "ingetrazo_d5_livesync", "version": "0.9.9",
+            "plugin": "ingetrazo_d5_livesync", "version": "0.9.10-test.1",
             "parent_pid": os.getpid(), "created": time.time(),
         })
 
@@ -77,7 +77,7 @@ class SnapshotSession:
     def pending(self):
         return self.revision > self.acknowledged
 
-    def publish(self, scene, exporter,force_full=False,replace_pending=False):
+    def publish(self, scene, exporter,force_full=False,replace_pending=False,on_export=None):
         receiver_reason=''
         if replace_pending:
             state=read_json(self.directory/'status.json',{});latest=read_json(self.directory/'latest.json',{})
@@ -87,6 +87,19 @@ class SnapshotSession:
             receiver_reason=state.get('message','')
         if self.pending and not replace_pending:
             raise RuntimeError("上一版尚未收到 D5 傳送成功回報")
+        if not force_full and not replace_pending and self.motion_baseline is not None and self.motion_certificate is not None:
+            state=read_json(self.directory/'status.json',{})
+            if (self.acknowledged==self.revision and self.revision>0
+                    and state.get('phase') in ('sent','idle') and state.get('official_return_code')==0
+                    and state.get('acknowledged_revision')==self.revision
+                    and state.get('model_sha256')==self.motion_base_hash):
+                try:unchanged=self.motion_certificate.unchanged(self.motion_baseline)
+                except (ValueError,AttributeError,TypeError):unchanged=False
+                if unchanged:
+                    return {'revision':self.revision,'kind':'skipped','bytes':0,'export_seconds':0.,
+                            'sync_decision':{'route':'skipped','reason':'acknowledged_state_unchanged',
+                                             'commands':[],'baseline_revision':self.acknowledged}}
+        if on_export is not None:on_export()
         started = time.perf_counter()
         number = self.revision if replace_pending else self.revision + 1
         certificate=self.motion_certificate
