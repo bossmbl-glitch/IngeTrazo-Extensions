@@ -30,3 +30,23 @@
 - Describe changed files, reasons, tests, and risks.
 - Do not overwrite previous official releases.
 - Do not commit passwords, access tokens, or private credentials.
+
+## Required Project Documentation
+
+Before modifying any extension, read:
+
+1. docs/DEVELOPMENT_WORKFLOW.md
+2. docs/EXTENSIONS_INDEX.md
+3. docs/FULL_EXTENSIONS_ORGANIZATION.md
+4. docs/SOURCE_FILE_MAP.csv
+5. The target extension's SPEC.md and KNOWN_ISSUES.md
+
+The plugins/ directory contains the original source code.
+
+Do not move or split existing Python modules without compatibility testing.
+
+For IntegratedTools, read the corresponding features/ subdirectory before editing the main Python module.
+
+Always update the relevant CHANGELOG.md after code changes.
+
+Never mark an extension as officially released without user approval and application-level verification.
