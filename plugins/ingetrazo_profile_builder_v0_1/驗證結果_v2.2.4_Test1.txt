@@ -1,0 +1,44 @@
+PASS test_geometry.py
+PASS test_v08.py
+PASS test_v09.py
+PASS test_v10.py
+PASS test_v11.py
+PASS test_v12.py
+PASS test_v13.py
+PASS test_v14.py
+PASS test_v15.py
+PASS test_v16.py
+SKIP test_v17.py：缺少歷史 v1.6 ZIP
+PASS test_v18.py
+PASS test_v181.py
+PASS test_v182.py
+PASS test_v19.py
+PASS test_v20.py
+PASS test_v201.py
+PASS test_v202.py
+PASS test_v203.py
+PASS test_v204.py
+PASS test_v205.py
+PASS test_v206.py
+PASS test_v210_mouse_geometry.py
+PASS test_v211_preferences.py
+PASS test_v213_experimental.py
+PASS test_v214_wall_aligned.py
+PASS test_v215_horizontal.py
+PASS test_v216_wall_frame.py
+PASS test_v220_dialog.py
+PASS test_v220_dpi.py
+PASS test_v220_integration.py
+PASS test_v221_stamp_face.py
+PASS test_v222_clean_edges.py
+PASS test_v223_float_precision.py
+PASS test_v224_temporary.py
+
+所有 Python 檔案 AST 語法解析通過。
+IngeTrazo 核心來源：ingelibre/ingetrazo commit e61132a7f8a098ca77fb6b0e7cac488c1bd410cb。
+測試環境：Linux / Python 3.12 / PySide6 6.12.0 / QT_QPA_PLATFORM=offscreen。
+新流程使用實際 Scene/Mesh/Group/History 與 Qt，命名對話框以測試替身控制確認／取消。
+既有 18 組原生推拉、水平／牆面幾何、圖庫卡片、編輯及 float32 分類測試通過。
+AST 比對：sweep_faces、experimental_sweep_faces、mesh_ready_faces、edge_display_rules、apply_edge_display、_mesh_vertex_key、_mesh_edge_key、ordered_paths 與正式版基準一致。
+未執行 Windows GUI／OpenGL／真實滑鼠吸附／大型模型實機驗收。
+本文件為測試結果，不代表正式發布或使用者驗收。

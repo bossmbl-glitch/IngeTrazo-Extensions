@@ -398,7 +398,7 @@ class ProfileBrowser(QDialog):
 
     def _profile_items(self):
         current=[]
-        for name,points in sorted(self.owner.profiles.items(),key=lambda v:v[0].casefold()):
+        for name,points in sorted(self.owner.library_profiles().items(),key=lambda v:v[0].casefold()):
             key=('saved',name)
             current.append({'type':'profile','key':key,'name':name,'points':points,'source':'saved'})
         current.extend(self._cache.values())

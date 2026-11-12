@@ -26,6 +26,7 @@ def merged_recipe(old, current, fields):
     if not isinstance(new.get('settings'),dict):raise ValueError('原群組缺少有效參數。')
     if 'profile' in fields:
         new['profile']=current['profile']
+        new['temporary_profile']=bool(current.get('temporary_profile'))
         new['section']=clean_polygon(current['section'])
         for key in ('width_mm','height_mm'):new['settings'][key]=current['settings'][key]
     for key in ('anchor','rotate_deg','mirror','off_u_mm','off_v_mm','miter'):
@@ -179,7 +180,8 @@ def edit_selected_profiles(panel):
         selected=list(scene.selection)
         if not selected or any(g not in scene.groups or not isinstance(getattr(g,'ext',None),dict) or PLUGIN_KEY not in g.ext for g in selected):
             raise ValueError('請只選取本套件建立的輪廓或剖面群組。')
-        current={'profile':panel.profile.currentText(),'section':copy.deepcopy(panel.profiles[panel.profile.currentText()]),
+        current={'temporary_profile':panel.profile.currentText() in panel._temporary_profiles,
+                 'profile':panel.profile.currentText(),'section':copy.deepcopy(panel.profiles[panel.profile.currentText()]),
                  'settings':panel.opts(),'material':panel.material.currentText(),'tag':panel.tag.currentText()}
         dialog=QDialog(panel);dialog.setWindowTitle('編輯輪廓屬性')
         layout=QVBoxLayout(dialog);layout.addWidget(QLabel(f'更新 {len(selected)} 個群組；只套用勾選項目，保留路徑與位置。'))
@@ -251,7 +253,8 @@ class ProfileStampTool(Tool):
     def _refresh(self,ctx):
         from . import as_tuple,experimental_hit_wall_normal
         normal=self.plane or experimental_hit_wall_normal(ctx) or (0.,0.,1.)
-        recipe={'kind':'stamp','stamp_topology':'single_face_v1','profile':self.panel.profile.currentText(),
+        recipe={'temporary_profile':self.panel.profile.currentText() in getattr(self.panel,'_temporary_profiles',set()),
+                'kind':'stamp','stamp_topology':'single_face_v1','profile':self.panel.profile.currentText(),
                 'section':copy.deepcopy(self.panel.profiles[self.panel.profile.currentText()]),
                 'settings':self.panel.opts(),'origin':as_tuple(ctx.world),'normal':normal,
                 'material':self.panel.material.currentText(),'tag':self.panel.tag.currentText()}
