@@ -10,7 +10,7 @@
 
 | 資料夾 | 編號 | 名稱 | 來源宣告版本 | 來源檔案數 | 主要來源 |
 |---|---|---|---|---:|---|
-| `01_ProfileBuilder` | PB-01 | 快速輪廓生成器 | 2.2.3 | 75 | `ingetrazo_profile_builder_v0_1/` |
+| `01_ProfileBuilder` | PB-01 | 快速輪廓生成器 | 2.2.4（正式版） | 83 | `ingetrazo_profile_builder_v0_1/` |
 | `02_IntegratedTools` | INT-01 | 萊姆整合工具箱 | 0.19.0 | 36 | `lime_integrated_tools_ingetrazo.py`<br>`lime_integrated_assets/` |
 | `03_CabinetDoor` | DOOR-01 | 櫃門片樣式工具 | 1.25.1 | 86 | `one_degree_cabinet_door.py`<br>`櫃門片樣式工具_IngeTrazo套件/` |
 | `04_D5LiveSync` | D5-01 | D5 LiveSync | 0.9.9 | 70 | `ingetrazo_d5_livesync/`<br>`livesync-validation.json`<br>`LiveSync驗證與效能.txt`<br>`移機安裝說明.txt` |
@@ -39,6 +39,8 @@
 見 [`02_IntegratedTools/FEATURE_INDEX.md`](../02_IntegratedTools/FEATURE_INDEX.md)。
 
 ## 檔案映射
+
+PB-01 已於 2026-11-12 更新至使用者驗收的 v2.2.4；該列檔案數為目前來源（排除快取）。其餘套件與 `SOURCE_FILE_MAP.csv` 仍為初次盤點快照。新版來源與正式包見 `01_ProfileBuilder/SOURCE_REFERENCE.md`。
 
 全部 402 個來源檔案都已一對一映射至上面 23 個外掛管理目錄；請查看 `SOURCE_FILE_MAP.csv`。
 其中 `.pyc` 22 個標記 `ignore`，已上傳 GitHub 的 `plugins/` 目錄若使用 `.gitignore`，不應包含快取。
