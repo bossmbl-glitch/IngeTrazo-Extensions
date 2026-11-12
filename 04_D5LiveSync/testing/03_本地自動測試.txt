@@ -1,0 +1,27 @@
+test_baked_move_uv_and_undo_redo (test_0910.LiveSyncTests.test_baked_move_uv_and_undo_redo) ... ok
+test_baked_rotation_nested_scope (test_0910.LiveSyncTests.test_baked_rotation_nested_scope) ... ok
+test_component_metadata_falls_back (test_0910.LiveSyncTests.test_component_metadata_falls_back) ... ok
+test_external_edit_falls_back (test_0910.LiveSyncTests.test_external_edit_falls_back) ... ok
+test_history_overflow_falls_back (test_0910.LiveSyncTests.test_history_overflow_falls_back) ... ok
+test_instance_fast_path (test_0910.LiveSyncTests.test_instance_fast_path) ... ok
+test_loose_paint_falls_back (test_0910.LiveSyncTests.test_loose_paint_falls_back) ... ok
+test_manual_full_bypasses_skip (test_0910.LiveSyncTests.test_manual_full_bypasses_skip) ... ok
+test_missing_texture_never_skips (test_0910.LiveSyncTests.test_missing_texture_never_skips) ... ok
+test_native_partial_export_and_hold_composition (test_0910.LiveSyncTests.test_native_partial_export_and_hold_composition) ... ok
+test_nested_paint_clone_undo_redo (test_0910.LiveSyncTests.test_nested_paint_clone_undo_redo) ... ok
+test_noop_metadata_and_history_changes_never_skip (test_0910.LiveSyncTests.test_noop_metadata_and_history_changes_never_skip) ... ok
+test_noop_no_export_no_revision (test_0910.LiveSyncTests.test_noop_no_export_no_revision) ... ok
+test_noop_with_both_update_options_disabled (test_0910.LiveSyncTests.test_noop_with_both_update_options_disabled) ... ok
+test_paint_partial_keeps_uid_and_hold (test_0910.LiveSyncTests.test_paint_partial_keeps_uid_and_hold) ... ok
+test_paint_source_mismatch_falls_back (test_0910.LiveSyncTests.test_paint_source_mismatch_falls_back) ... ok
+test_pending_never_skips (test_0910.LiveSyncTests.test_pending_never_skips) ... ok
+test_receiver_error_never_skips (test_0910.LiveSyncTests.test_receiver_error_never_skips) ... ok
+test_shared_back_material_falls_back (test_0910.LiveSyncTests.test_shared_back_material_falls_back) ... ok
+test_swallowed_native_failure_invalidates_local_certificate (test_0910.LiveSyncTests.test_swallowed_native_failure_invalidates_local_certificate) ... ok
+test_texture_change_never_skips (test_0910.LiveSyncTests.test_texture_change_never_skips) ... ok
+test_unknown_command_falls_back (test_0910.LiveSyncTests.test_unknown_command_falls_back) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.180s
+
+OK
