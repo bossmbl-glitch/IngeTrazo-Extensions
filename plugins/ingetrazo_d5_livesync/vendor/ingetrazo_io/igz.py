@@ -1,0 +1,572 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Victor Crespo (3dvic.com · github.com/vicc3d)
+# Texture projection and orbit-camera maths ported from IngeTrazo,
+# Copyright (C) 2026 Marco Sumari Tellez and IngeTrazo contributors.
+"""Reading an IngeTrazo ``.igz`` document without IngeTrazo.
+
+Pure Python (no ``bpy``, no Qt), so it can be tested on its own. A document
+is either plain JSON or a ZIP holding ``document.json`` plus the texture
+images under ``textures/`` (see ``formats/igz.py`` in IngeTrazo). Large
+documents (format 3, IngeTrazo 0.5.8) keep their big meshes as binary blocks
+under ``geom/``: they are unpacked here into the same ``faces``/``edges``
+lists a JSON mesh has, and packed back by :func:`write_document`.
+
+Also here: IngeTrazo's texture projection, so every face gets exactly the
+UVs IngeTrazo draws it with (SketchUp's planar basis, tile size, rotation,
+or the fitted world→UV map of an imported face).
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import zipfile
+from pathlib import Path
+
+_ZIP_MAGIC = b"PK\x03\x04"
+_DOC_ENTRY = "document.json"
+#: IngeTrazo's colour for faces nobody painted (the viewport default).
+DEFAULT_COLOR = (0.96, 0.95, 0.925)
+#: Below this ``|Z × n|`` a face counts as horizontal (SketchUp's measured
+#: tolerance, ``core/texture.py``).
+_VERTICAL_TOLERANCE = 1e-3
+
+
+class Document:
+    """A parsed ``.igz``: the ``scene`` payload and the embedded images."""
+
+    def __init__(self, path, geometry_cache=None) -> None:
+        self.path = Path(path)
+        raw = self.path.read_bytes()
+        self._archive = None
+        if raw.startswith(_ZIP_MAGIC):
+            self._archive = zipfile.ZipFile(self.path)
+            try:
+                data = json.loads(self._archive.read(_DOC_ENTRY).decode("utf-8"))
+            except KeyError:
+                raise ValueError(f"{self.path.name} is not an IngeTrazo document")
+        else:
+            data = json.loads(raw.decode("utf-8"))
+        if not isinstance(data, dict) or "scene" not in data:
+            raise ValueError(f"{self.path.name} is not an IngeTrazo document")
+        self.format = data.get("igz_format", 1)
+        self.app_version = data.get("app_version", "")
+        self.scene = data["scene"]
+        self.geometry_stats = {"blocks_decoded": 0, "blocks_reused": 0}
+        _expand_geometry(self.scene, self._read_member, geometry_cache, self.geometry_stats)
+
+    def _read_member(self, name: str) -> bytes:
+        if self._archive is None:
+            raise ValueError(f"{self.path.name}: a geometry block outside a container")
+        try:
+            return self._archive.read(name)
+        except KeyError:
+            raise ValueError(f"{self.path.name} lost its geometry block {name!r}") from None
+
+    def close(self) -> None:
+        if self._archive is not None:
+            self._archive.close()
+            self._archive = None
+
+    def image_bytes(self, tex: dict) -> tuple[str, bytes] | None:
+        """``(file name, bytes)`` of a face texture: the embedded member of
+        a container, or the file a plain document points at. ``None`` when
+        neither can be read."""
+        member = tex.get("embed")
+        if member and self._archive is not None:
+            try:
+                return member.rsplit("/", 1)[-1], self._archive.read(member)
+            except KeyError:
+                pass
+        path = tex.get("path")
+        if path:
+            p = Path(path)
+            if not p.is_absolute():
+                p = self.path.parent / p
+            try:
+                return p.name, p.read_bytes()
+            except OSError:
+                pass
+        return None
+
+
+# ---- Format 3: big meshes as binary blocks (IngeTrazo formats/igz.py) -----
+
+_GEOM_PREFIX = "geom/"
+#: The dtypes a block may declare; anything else is refused, as IngeTrazo
+#: does, so a crafted document cannot make the reader build other objects.
+_GEOM_DTYPES = frozenset(("<f4", "<i4", "<i8", "|u1"))
+#: Keys never walked looking for blocks: coordinate and element lists.
+_WALK_SKIP = frozenset(("faces", "edges", "vertices", "holes", "texture"))
+
+
+def _geom_meshes(node):
+    """Every mesh payload in ``node`` stored as a format-3 block."""
+    if isinstance(node, dict):
+        meta = node.get("geom")
+        if isinstance(meta, dict) and "arrays" in meta:
+            yield node
+        for key, value in node.items():
+            if key not in _WALK_SKIP and key != "geom":
+                yield from _geom_meshes(value)
+    elif isinstance(node, list):
+        for value in node:
+            if isinstance(value, (dict, list)):
+                yield from _geom_meshes(value)
+
+
+def geometry_arrays(meta, blob: bytes) -> dict:
+    """The arrays of a format-3 block, checked as IngeTrazo checks them
+    (``_geometry_arrays``): known dtypes, inside the blob, and every index
+    pointing at something that exists. ``ValueError`` otherwise."""
+    import numpy as np
+
+    def bad(why):
+        return ValueError(f"damaged geometry block ({why})")
+
+    layout = meta.get("arrays") if isinstance(meta, dict) else None
+    if not isinstance(layout, dict):
+        raise bad("no layout")
+    out = {}
+    for name, spec in layout.items():
+        try:
+            dtype, shape, offset = spec
+            shape = tuple(int(n) for n in shape)
+            offset = int(offset)
+        except (TypeError, ValueError):
+            raise bad(name) from None
+        if dtype not in _GEOM_DTYPES or offset < 0 or any(n < 0 for n in shape):
+            raise bad(name)
+        count = 1
+        for n in shape:
+            count *= n
+        if offset + count * np.dtype(dtype).itemsize > len(blob):
+            raise bad(name)
+        out[name] = np.frombuffer(blob, dtype=dtype, count=count,
+                                  offset=offset).reshape(shape)
+    for name in ("pos", "edges", "rings", "ring_sizes", "ring_counts",
+                 "face_attr", "edge_flags"):
+        if name not in out:
+            raise bad(f"missing {name}")
+    pos, edges = out["pos"], out["edges"]
+    if pos.ndim != 2 or pos.shape[1] != 3:
+        raise bad("pos")
+    if edges.ndim != 2 or edges.shape[1] != 2:
+        raise bad("edges")
+    for name in ("edges", "rings"):
+        a = out[name]
+        if a.size and (a.min() < 0 or a.max() >= len(pos)):
+            raise bad(name)
+    sizes, counts = out["ring_sizes"], out["ring_counts"]
+    if (sizes.size and sizes.min() < 1) or (counts.size and counts.min() < 1):
+        raise bad("rings")
+    if int(sizes.sum()) != len(out["rings"]) or int(counts.sum()) != len(sizes):
+        raise bad("rings")
+    fa = out["face_attr"]
+    n_attrs = len(meta.get("face_attrs") or ())
+    if len(fa) != len(counts) or (fa.size and (fa.min() < -1 or fa.max() >= n_attrs)):
+        raise bad("face_attr")
+    for name in ("edge_flags", "edge_curve", "edge_layer"):
+        if name in out and len(out[name]) != len(edges):
+            raise bad(name)
+    el = out.get("edge_layer")
+    if el is not None and el.size and (el.min() < -1
+                                       or el.max() >= len(meta.get("edge_layers") or ())):
+        raise bad("edge_layer")
+    return out
+
+
+def _expand_geometry(scene, read, cache=None, stats=None) -> None:
+    """Give every format-3 mesh in ``scene`` the ``faces`` and ``edges``
+    lists of a JSON mesh, in the same order (a face's index is the same in
+    both). ``read(member)`` returns a block's bytes. A face touching a
+    non-finite point keeps its place with no corners: IngeTrazo leaves it
+    out too."""
+    import numpy as np
+    for mesh in _geom_meshes(scene):
+        meta = mesh["geom"]
+        member = meta.get("member")
+        if not isinstance(member, str) or not member.startswith(_GEOM_PREFIX):
+            raise ValueError("damaged geometry block (member)")
+        blob = read(member)  # ZipFile verifies CRC even on cache hits.
+        # Member indexes may change between exports; hash content + all metadata
+        # except its archive name. Material tables, flags, holes and UVs count.
+        signature = hashlib.sha256(
+            json.dumps({k:v for k,v in meta.items() if k != 'member'},
+                       sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+            + blob).hexdigest()
+        if cache is not None and signature in cache:
+            mesh['faces'], mesh['edges'] = cache[signature]
+            mesh['_bridge_geometry_digest'] = signature
+            if stats is not None: stats['blocks_reused'] += 1
+            continue
+        a = geometry_arrays(meta, blob)
+        pos_arr = a["pos"].astype(np.float64)
+        finite = np.isfinite(pos_arr).all(axis=1).tolist()
+        pos = pos_arr.tolist()
+        rings = a["rings"].tolist()
+        sizes = a["ring_sizes"].tolist()
+        table = meta.get("face_attrs") or []
+        faces = []
+        r = k = 0
+        for count, ai in zip(a["ring_counts"].tolist(), a["face_attr"].tolist()):
+            loops = []
+            for _ in range(count):
+                loops.append(rings[k:k + sizes[r]])
+                k += sizes[r]
+                r += 1
+            face = dict(table[ai]) if ai >= 0 else {}
+            if isinstance(face.get("texture"), dict):
+                face["texture"] = dict(face["texture"])   # its own, to edit
+            if all(finite[i] for loop in loops for i in loop):
+                face["vertices"] = [pos[i] for i in loops[0]]
+                if len(loops) > 1:
+                    face["holes"] = [[pos[i] for i in h] for h in loops[1:]]
+            else:
+                face["vertices"] = []
+            faces.append(face)
+        flags = a["edge_flags"].tolist()
+        curves = a["edge_curve"].tolist() if "edge_curve" in a else None
+        layers = a["edge_layer"].tolist() if "edge_layer" in a else None
+        layer_names = meta.get("edge_layers") or []
+        edges = []
+        for i, (v0, v1) in enumerate(a["edges"].tolist()):
+            if not (finite[v0] and finite[v1]):
+                continue
+            e = {"a": pos[v0], "b": pos[v1]}
+            if flags[i] & 1:
+                e["soft"] = True
+            if flags[i] & 2:
+                e["hidden"] = True
+            if curves is not None and curves[i] != -1:
+                e["curve"] = curves[i]
+            if layers is not None and layers[i] >= 0:
+                e["layer"] = layer_names[layers[i]]
+            edges.append(e)
+        mesh["faces"] = faces
+        mesh["edges"] = edges
+        if cache is not None:
+            cache[signature] = (faces, edges)
+            mesh['_bridge_geometry_digest'] = signature
+        if stats is not None: stats['blocks_decoded'] += 1
+
+
+def _pack_face_attrs(mesh, blob: bytes) -> bytes:
+    """Fold the face attributes of an expanded format-3 mesh back into its
+    block: the shared table in the JSON and the per-face index in the blob.
+    Geometry is never written: only what a face wears can change here."""
+    import numpy as np
+    meta = mesh["geom"]
+    faces = mesh["faces"]
+    dtype, shape, offset = meta["arrays"]["face_attr"]
+    if len(faces) != int(shape[0]):
+        raise ValueError("the faces of a geometry block changed in number")
+    table = list(meta.get("face_attrs") or [])
+    index = {json.dumps(t, sort_keys=True, separators=(",", ":")): i
+             for i, t in enumerate(table)}
+    out = []
+    for f in faces:
+        attrs = {k: v for k, v in f.items() if k not in ("vertices", "holes")}
+        if not attrs:
+            out.append(-1)
+            continue
+        key = json.dumps(attrs, sort_keys=True, separators=(",", ":"))
+        i = index.get(key)
+        if i is None:
+            i = index[key] = len(table)
+            table.append(attrs)
+        out.append(i)
+    data = np.asarray(out, dtype=dtype).tobytes()
+    if table:
+        meta["face_attrs"] = table
+    return blob[:offset] + data + blob[offset + len(data):]
+
+
+# ---- Geometry helpers ---------------------------------------------------------
+
+def sub(a, b):
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0])
+
+
+def dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def normalize(v):
+    ln = math.sqrt(dot(v, v))
+    return (v[0] / ln, v[1] / ln, v[2] / ln) if ln > 1e-30 else (0.0, 0.0, 1.0)
+
+
+def polygon_normal(pts):
+    """Newell's normal of a polygon (robust for concave loops)."""
+    nx = ny = nz = 0.0
+    n = len(pts)
+    for i in range(n):
+        x0, y0, z0 = pts[i]
+        x1, y1, z1 = pts[(i + 1) % n]
+        nx += (y0 - y1) * (z0 + z1)
+        ny += (z0 - z1) * (x0 + x1)
+        nz += (x0 - x1) * (y0 + y1)
+    return normalize((nx, ny, nz))
+
+
+def matrix_from_column_major(vals):
+    """A 4×4 row list from IngeTrazo's column-major ``QMatrix4x4.data()``."""
+    return [[float(vals[col * 4 + row]) for col in range(4)] for row in range(4)]
+
+
+# ---- Texture projection (IngeTrazo core/texture.py) ------------------------
+
+def projection_basis(normal):
+    nx, ny, nz = normalize(normal)
+    xx, xy = -ny, nx                      # Z × n
+    lx = math.sqrt(xx * xx + xy * xy)
+    if lx < _VERTICAL_TOLERANCE:
+        return ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0)) if nz > 0 \
+            else ((-1.0, 0.0, 0.0), (0.0, 1.0, 0.0))
+    xx, xy = xx / lx, xy / lx
+    return (xx, xy, 0.0), (-nz * xy, nz * xx, nx * xy - ny * xx)
+
+
+def face_uvs(tex: dict, normal, pts):
+    """The UV of each point, exactly as IngeTrazo maps ``tex`` on a face."""
+    uvw = tex.get("uvw")
+    if uvw and len(uvw) == 8:
+        return [(uvw[0] * p[0] + uvw[1] * p[1] + uvw[2] * p[2] + uvw[3],
+                 uvw[4] * p[0] + uvw[5] * p[1] + uvw[6] * p[2] + uvw[7])
+                for p in pts]
+    u_axis, v_axis = projection_basis(normal)
+    rot = float(tex.get("rot", 0.0) or 0.0)
+    if rot:
+        a = math.radians(rot)
+        c, s = math.cos(a), math.sin(a)
+        u_axis, v_axis = (tuple(u_axis[i] * c + v_axis[i] * s for i in range(3)),
+                          tuple(v_axis[i] * c - u_axis[i] * s for i in range(3)))
+    sw = float(tex.get("sw", 1.0) or 1.0)
+    sh = float(tex.get("sh", 1.0) or 1.0)
+    sw = sw if abs(sw) > 1e-9 else 1.0
+    sh = sh if abs(sh) > 1e-9 else 1.0
+    return [(dot(p, u_axis) / sw, dot(p, v_axis) / sh) for p in pts]
+
+
+def fit_uvw(points, uvs):
+    """The world→UV map ``[ux, uy, uz, uc, vx, vy, vz, vc]`` IngeTrazo
+    stores as a face's ``texture["uvw"]``, fitted to UVs edited elsewhere
+    (Blender's UV editor). ``(uvw, error)``: the least-squares fit over the
+    face's plane, and the largest UV distance it misses a point by: 0 for
+    anything affine (move, rotate, scale, shear, a planar unwrap), which is
+    every edit IngeTrazo's map can hold exactly. ``(None, None)`` for a
+    degenerate face.
+
+    Same map as IngeTrazo's ``core.texture.fit_uv_affine`` on affine UVs
+    (which fits three points exactly); over all points when they are not,
+    and with no gradient along the normal, so the map stays a projection of
+    the face's own plane."""
+    n = len(points)
+    if n < 3 or len(uvs) < n:
+        return None, None
+    normal = polygon_normal(points)
+    e1 = None
+    for i in range(1, n):
+        d = sub(points[i], points[0])
+        d = sub(d, tuple(normal[k] * dot(d, normal) for k in range(3)))
+        if dot(d, d) > 1e-18:
+            e1 = normalize(d)
+            break
+    if e1 is None:
+        return None, None
+    e2 = cross(normal, e1)
+    o = points[0]
+    st = [(dot(sub(p, o), e1), dot(sub(p, o), e2)) for p in points[:n]]
+    # Normal equations of [s t 1]·[a b c] = target, 3×3.
+    sss = sum(s * s for s, _t in st)
+    stt = sum(s * t for s, t in st)
+    ttt = sum(t * t for _s, t in st)
+    ss1 = sum(s for s, _t in st)
+    tt1 = sum(t for _s, t in st)
+    m = [[sss, stt, ss1], [stt, ttt, tt1], [ss1, tt1, float(n)]]
+
+    def solve(rhs):
+        a = [row[:] + [r] for row, r in zip(m, rhs)]
+        for c in range(3):
+            piv = max(range(c, 3), key=lambda r: abs(a[r][c]))
+            if abs(a[piv][c]) < 1e-18:
+                return None
+            a[c], a[piv] = a[piv], a[c]
+            for r in range(3):
+                if r != c:
+                    f = a[r][c] / a[c][c]
+                    for k in range(c, 4):
+                        a[r][k] -= f * a[c][k]
+        return [a[r][3] / a[r][r] for r in range(3)]
+
+    out = []
+    for comp in (0, 1):
+        vals = [float(uv[comp]) for uv in uvs[:n]]
+        rhs = [sum(s * v for (s, _t), v in zip(st, vals)),
+               sum(t * v for (_s, t), v in zip(st, vals)),
+               sum(vals)]
+        abc = solve(rhs)
+        if abc is None:
+            return None, None
+        a, b, c = abc
+        g = tuple(a * e1[k] + b * e2[k] for k in range(3))
+        out += [g[0], g[1], g[2], c - dot(g, o)]
+    err = 0.0
+    for p, uv in zip(points, uvs):
+        u = out[0] * p[0] + out[1] * p[1] + out[2] * p[2] + out[3]
+        v = out[4] * p[0] + out[5] * p[1] + out[6] * p[2] + out[7]
+        err = max(err, math.hypot(u - uv[0], v - uv[1]))
+    return out, err
+
+
+def faces_at(scene: dict, src: str):
+    """The face list a mesh came from: ``loose``, ``proto/<i>`` or
+    ``g/<i>/<j>…`` (index path through groups and children)."""
+    if src == "loose":
+        return scene.get("faces")
+    kind, _sl, rest = src.partition("/")
+    try:
+        if kind == "proto":
+            return scene["protos"][int(rest)].get("faces")
+        if kind == "g":
+            node = None
+            items = scene.get("groups")
+            for i in rest.split("/"):
+                node = items[int(i)]
+                items = node.get("children") or []
+            return node.get("faces") if node is not None else None
+    except (KeyError, IndexError, ValueError, TypeError):
+        return None
+    return None
+
+
+def write_document(path, scene: dict) -> None:
+    """Save ``scene`` back into the ``.igz`` at ``path``, keeping everything
+    else (format, version, embedded textures) as it was. Written to a
+    temporary file and renamed over the old one, as IngeTrazo saves.
+
+    A format-3 mesh goes back as its block: the ``faces``/``edges`` lists
+    unpacked on reading are left out of the JSON, and the face attributes
+    are folded into the block (the lists stay in ``scene``)."""
+    import os
+    import tempfile
+    path = Path(path)
+    raw = path.read_bytes()
+    zipped = raw.startswith(_ZIP_MAGIC)
+    if zipped:
+        with zipfile.ZipFile(path) as zf:
+            data = json.loads(zf.read(_DOC_ENTRY).decode("utf-8"))
+            members = [(info, zf.read(info.filename)) for info in zf.infolist()]
+    else:
+        data = json.loads(raw.decode("utf-8"))
+    blocks = list(_geom_meshes(scene))
+    if blocks and not zipped:
+        raise ValueError(f"{path.name}: a geometry block outside a container")
+    if zipped:
+        blobs = {info.filename: blob for info, blob in members}
+        for mesh in blocks:
+            name = mesh["geom"].get("member")
+            if name not in blobs:
+                raise ValueError(f"{path.name} lost its geometry block {name!r}")
+            if "faces" in mesh:
+                blobs[name] = _pack_face_attrs(mesh, blobs[name])
+        members = [(info, blobs[info.filename]) for info, _b in members]
+    hidden = [(mesh, mesh.pop("faces", None), mesh.pop("edges", None))
+              for mesh in blocks]
+    try:
+        data["scene"] = scene
+        text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    finally:
+        for mesh, faces, edges in hidden:
+            if faces is not None:
+                mesh["faces"] = faces
+            if edges is not None:
+                mesh["edges"] = edges
+    fd, tmp = tempfile.mkstemp(prefix=".ingetrazo-", suffix=".igz",
+                               dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            if zipped:
+                with zipfile.ZipFile(fh, "w") as out:
+                    for info, blob in members:
+                        if info.filename == _DOC_ENTRY:
+                            out.writestr(info, text.encode("utf-8"))
+                        else:
+                            out.writestr(info, blob)
+            else:
+                fh.write(text.encode("utf-8"))
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def effective_attrs(face: dict, container: dict | None) -> dict:
+    """What a face is drawn with inside a painted group (SketchUp's rule:
+    the face's own paint wins; unpainted faces wear the container's)."""
+    if not container or face.get("texture") is not None \
+            or face.get("color") is not None:
+        return face
+    merged = dict(face)
+    for key in ("color", "texture", "opacity", "mat"):
+        if container.get(key) is not None:
+            merged[key] = container[key]
+    return merged
+
+
+# ---- Cameras ----------------------------------------------------------------
+
+def camera_eye(view: dict):
+    """Eye point of an IngeTrazo orbit camera (``core/camera.py``)."""
+    t = view.get("target") or (0.0, 0.0, 0.0)
+    d = float(view.get("distance", 20.0))
+    yaw = float(view.get("yaw", -math.pi / 4))
+    pitch = float(view.get("pitch", math.pi / 6))
+    cp, sp = math.cos(pitch), math.sin(pitch)
+    return (t[0] + d * cp * math.cos(yaw), t[1] + d * cp * math.sin(yaw),
+            t[2] + d * sp)
+
+
+def view_sig(view: dict) -> str:
+    """The camera of a scene as a short text. Two equal ones mean the same
+    camera, so a camera sent from Blender can tell whether IngeTrazo
+    changed its scene since."""
+    t = view.get("target") or (0.0, 0.0, 0.0)
+    fov = view.get("fov", view.get("fov_deg", 45.0))
+    return repr([round(float(x), 4) for x in t] + [
+        round(float(view.get("distance", 20.0)), 4),
+        round(float(view.get("yaw", -math.pi / 4)), 5),
+        round(float(view.get("pitch", math.pi / 6)), 5),
+        round(float(fov), 4), bool(view.get("parallel")),
+        bool(view.get("two_point"))])
+
+
+def set_view_camera(view: dict, cam: dict) -> None:
+    """Give the scene ``view`` the camera ``cam`` (target, distance, yaw,
+    pitch, fov, parallel, two_point), written the way IngeTrazo writes it
+    (``core/saved_views.py``): the field of view only when it is not 45°,
+    the two switches only when on. Everything else the scene remembers
+    (layers, style, section, shadows, hidden objects) stays as it was."""
+    view["target"] = [round(float(x), 9) for x in cam["target"]]
+    for k in ("distance", "yaw", "pitch"):
+        view[k] = round(float(cam[k]), 12)
+    view.pop("fov_deg", None)
+    if abs(float(cam["fov"]) - 45.0) > 1e-9:
+        view["fov"] = round(float(cam["fov"]), 9)
+    else:
+        view.pop("fov", None)
+    for k in ("parallel", "two_point"):
+        if cam.get(k):
+            view[k] = True
+        else:
+            view.pop(k, None)

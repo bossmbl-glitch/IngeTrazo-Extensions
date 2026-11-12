@@ -1,0 +1,48 @@
+{
+  "materials": [
+    {
+      "name": "light_tube鐵件",
+      "color": [
+        0.34901960784313724,
+        0.34901960784313724,
+        0.34901960784313724
+      ],
+      "opacity": 1.0,
+      "finish": "metal"
+    },
+    {
+      "name": "Led",
+      "color": [
+        0.9764705882352941,
+        0.9764705882352941,
+        0.9764705882352941
+      ],
+      "opacity": 1.0,
+      "finish": "matte"
+    }
+  ],
+  "source_render_materials": {
+    "light_tube鐵件": {
+      "Enscape.Material": {
+        "MaterialData": "﻿<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<SketchupMaterial xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" Version=\"4\">\r\n  <Type>GENERIC</Type>\r\n  <DoubleSided>false</DoubleSided>\r\n  <Opacity>1</Opacity>\r\n  <DiffuseColor>#595959</DiffuseColor>\r\n  <ImageFade>1</ImageFade>\r\n  <EmissiveColor>#000000</EmissiveColor>\r\n  <EmissiveStrength>0</EmissiveStrength>\r\n  <TintColor>#FFFFFF</TintColor>\r\n  <Roughness>0.3</Roughness>\r\n  <BumpAmount>0</BumpAmount>\r\n  <NormalMapIntensity>0</NormalMapIntensity>\r\n  <Metallic>1</Metallic>\r\n  <Specular>0.5</Specular>\r\n  <IndexOfRefraction>0</IndexOfRefraction>\r\n  <IsSolidGlass>false</IsSolidGlass>\r\n  <BumpMapType>UNDEFINED</BumpMapType>\r\n  <TextureWidth>0</TextureWidth>\r\n  <TextureHeight>0</TextureHeight>\r\n</SketchupMaterial>"
+      }
+    },
+    "Led": {
+      "Enscape.Material": {
+        "MaterialData": "﻿<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<SketchupMaterial xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" Version=\"3\">\r\n  <Type>GENERIC</Type>\r\n  <DoubleSided>false</DoubleSided>\r\n  <Opacity>1</Opacity>\r\n  <DiffuseColor>#F9F9F9</DiffuseColor>\r\n  <ImageFade>1</ImageFade>\r\n  <EmissiveColor>#FAF0E6</EmissiveColor>\r\n  <EmissiveStrength>51523.736982212758</EmissiveStrength>\r\n  <TintColor>#FFFFFF</TintColor>\r\n  <Roughness>0.89999997615814209</Roughness>\r\n  <BumpAmount>0</BumpAmount>\r\n  <NormalMapIntensity>1</NormalMapIntensity>\r\n  <Metallic>0</Metallic>\r\n  <Specular>0.5</Specular>\r\n  <IndexOfRefraction>1.5</IndexOfRefraction>\r\n  <IsSolidGlass>false</IsSolidGlass>\r\n  <BumpMapType>UNDEFINED</BumpMapType>\r\n  <TextureWidth>1</TextureWidth>\r\n  <TextureHeight>1</TextureHeight>\r\n</SketchupMaterial>"
+      },
+      "VRayInfo": {
+        "class": "MtlSingleBRDF",
+        "main_plugin": "/Led",
+        "type": "material",
+        "version": 42003
+      },
+      "VRayPlugins": {
+        "/Led": "{\"name\":\"/Led\",\"class\":\"MtlSingleBRDF\",\"type\":\"material\",\"version\":16,\"params\":{\"allow_negative_colors\":\"0\",\"brdf\":\"/Led/Bump\",\"double_sided\":\"1\",\"filter\":\"Color(1,1,1)\",\"scene_name\":\"ListString(Led)\"},\"userData\":{\"bind_all_on\":\"1\",\"bind_color_on\":\"1\",\"bind_opacity_on\":\"1\",\"bind_texture_mode\":\"0\",\"bind_texture_on\":\"1\",\"bump\":\"\",\"displacement\":\"\",\"effected_by_mtl_override\":\"1\",\"materialID\":\"\",\"renderStats\":\"\",\"swatch_type\":\"generic\",\"viewport_texture\":\"\"}}",
+        "/Led/Bump": "{\"name\":\"/Led/Bump\",\"class\":\"BRDFBump\",\"type\":\"BRDF\",\"version\":16,\"params\":{\"additional_bump\":\"\",\"base_brdf\":\"/Led/Bump/VRay Mtl\",\"bump_delta_scale\":\"1\",\"bump_map_mult\":\"1\",\"bump_shadows\":\"0\",\"bump_tex\":\"\",\"bump_tex_color\":\"Color(0.5,0.5,0.5)\",\"bump_tex_float\":\"\",\"bump_tex_mult\":\"1.0\",\"bump_tex_mult_tex\":\"1.0\",\"compute_bump_for_shadows\":\"0\",\"map_type\":\"0\",\"maya_compatible\":\"0\",\"normal_map_mult\":\"1\",\"normal_uvwgen\":\"\"},\"userData\":{\"bump_map_type\":\"0\",\"bump_tex_color_color\":\"Color(0.5,0.5,0.5)\",\"bump_tex_color_tex\":\"\",\"bump_tex_color_tex_mult\":\"1\",\"bump_tex_color_tex_on\":\"1\",\"bump_tex_mult_tex_float\":\"1.0\",\"bump_tex_mult_tex_tex\":\"\",\"bump_tex_mult_tex_tex_mult\":\"1.0\",\"bump_tex_mult_tex_tex_on\":\"1\",\"normal_map_type\":\"1\",\"texture_multiplier_mode\":\"0\"}}",
+        "/Led/Bump/VRay Mtl": "{\"name\":\"/Led/Bump/VRay Mtl\",\"class\":\"BRDFVRayMtl\",\"type\":\"BRDF\",\"version\":16,\"params\":{\"anisotropy\":\"0\",\"anisotropy_axis\":\"2\",\"anisotropy_derivation\":\"0\",\"anisotropy_rotation\":\"0\",\"anisotropy_uvwgen\":\"\",\"brdf_type\":\"4\",\"diffuse\":\"Color(0.947307, 0.947307, 0.947307)\",\"dispersion\":\"50\",\"dispersion_on\":\"0\",\"environment_override\":\"Color(0,0,0)\",\"environment_priority\":\"0\",\"fog_bias\":\"0\",\"fog_color\":\"Color(1,1,1)\",\"fog_color_tex\":\"Color(1,1,1)\",\"fog_mult\":\"1\",\"fog_unit_scale_on\":\"1\",\"fresnel\":\"1\",\"fresnel_ior\":\"1.6\",\"fresnel_ior_lock\":\"1\",\"gtr_gamma\":\"2\",\"gtr_oldGamma\":\"0\",\"hilight_glossiness\":\"1\",\"hilight_glossiness_lock\":\"1\",\"hilight_soften\":\"0\",\"metalness\":\"0\",\"opacity\":\"1\",\"opacity_mode\":\"2\",\"option_cutoff\":\"0.001\",\"option_double_sided\":\"1\",\"option_energy_mode\":\"0\",\"option_fix_dark_edges\":\"1\",\"option_glossy_fresnel\":\"0\",\"option_glossy_rays_as_gi\":\"1\",\"option_reflect_on_back\":\"0\",\"option_use_irradiance_map\":\"1\",\"option_use_roughness\":\"0\",\"refl_imap_color_thresh\":\"0.25\",\"refl_imap_max_rate\":\"1\",\"refl_imap_min_rate\":\"-1\",\"refl_imap_norm_thresh\":\"0.4\",\"refl_imap_samples\":\"20\",\"refl_interpolation_on\":\"0\",\"reflect\":\"Color(0,0,0)\",\"reflect_affect_alpha\":\"0\",\"reflect_depth\":\"5\",\"reflect_dim_distance\":\"100\",\"reflect_dim_distance_falloff\":\"0\",\"reflect_dim_distance_on\":\"0\",\"reflect_exit_color\":\"Color(0,0,0)\",\"reflect_glossiness\":\"1\",\"reflect_subdivs\":\"8\",\"reflect_trace\":\"1\",\"refr_imap_color_thresh\":\"0.25\",\"refr_imap_max_rate\":\"1\",\"refr_imap_min_rate\":\"-1\",\"refr_imap_norm_thresh\":\"0.4\",\"refr_imap_samples\":\"20\",\"refr_interpolation_on\":\"0\",\"refract\":\"Color(0, 0, 0)\",\"refract_affect_alpha\":\"0\",\"refract_affect_shadows\":\"1\",\"refract_depth\":\"5\",\"refract_exit_color\":\"Color(0,0,0)\",\"refract_exit_color_on\":\"0\",\"refract_glossiness\":\"1\",\"refract_ior\":\"1.6\",\"refract_subdivs\":\"8\",\"refract_trace\":\"1\",\"roughness\":\"0\",\"self_illumination\":\"\",\"self_illumination_gi\":\"1\",\"translucency\":\"0\",\"translucency_color\":\"Color(1,1,1)\",\"translucency_light_mult\":\"1\",\"translucency_scatter_coeff\":\"0\",\"translucency_scatter_dir\":\"1\",\"translucency_thickness\":\"1000\",\"use_environment_override\":\"0\"},\"userData\":{\"anisotropy_float\":\"0\",\"anisotropy_rotation_float\":\"0\",\"anisotropy_rotation_tex\":\"\",\"anisotropy_rotation_tex_mult\":\"1\",\"anisotropy_rotation_tex_on\":\"1\",\"anisotropy_tex\":\"\",\"anisotropy_tex_mult\":\"1\",\"anisotropy_tex_on\":\"1\",\"anisotropy_uvwgen_channel\":\"1\",\"diffuse_color\":\"Color(0.947307, 0.947307, 0.947307)\",\"diffuse_tex\":\"\",\"diffuse_tex_mult\":\"1\",\"diffuse_tex_on\":\"1\",\"environment_override_color\":\"Color(0,0,0)\",\"environment_override_tex\":\"\",\"environment_override_tex_mult\":\"1\",\"environment_override_tex_on\":\"1\",\"fog_color_tex_color\":\"Color(1,1,1)\",\"fog_color_tex_tex\":\"\",\"fog_color_tex_tex_mult\":\"1\",\"fog_color_tex_tex_on\":\"1\",\"fresnel_ior_float\":\"1.6\",\"fresnel_ior_tex\":\"\",\"fresnel_ior_tex_mult\":\"1\",\"fresnel_ior_tex_on\":\"1\",\"hilight_glossiness_float\":\"1\",\"hilight_glossiness_tex\":\"\",\"hilight_glossiness_tex_mult\":\"1\",\"hilight_glossiness_tex_on\":\"1\",\"linear_workflow\":\"0\",\"metalness_float\":\"0\",\"metalness_tex\":\"\",\"metalness_tex_mult\":\"1\",\"metalness_tex_on\":\"1\",\"opacity_float\":\"1\",\"opacity_from_alpha_mode\":\"0\",\"opacity_from_alpha_on\":\"1\",\"opacity_tex\":\"\",\"opacity_tex_mult\":\"1\",\"opacity_tex_on\":\"1\",\"reflect_color\":\"Color(0,0,0)\",\"reflect_glossiness_float\":\"1\",\"reflect_glossiness_tex\":\"\",\"reflect_glossiness_tex_mult\":\"1\",\"reflect_glossiness_tex_on\":\"1\",\"reflect_tex\":\"\",\"reflect_tex_mult\":\"1\",\"reflect_tex_on\":\"1\",\"refract_color\":\"Color(0, 0, 0)\",\"refract_glossiness_float\":\"1\",\"refract_glossiness_tex\":\"\",\"refract_glossiness_tex_mult\":\"1\",\"refract_glossiness_tex_on\":\"1\",\"refract_ior_float\":\"1.6\",\"refract_ior_tex\":\"\",\"refract_ior_tex_mult\":\"1\",\"refract_ior_tex_on\":\"1\",\"refract_tex\":\"\",\"refract_tex_mult\":\"1\",\"refract_tex_on\":\"1\",\"roughness_float\":\"0\",\"roughness_tex\":\"\",\"roughness_tex_mult\":\"1\",\"roughness_tex_on\":\"1\",\"shader_channels\":\"0\",\"texture_multiplier_mode\":\"0\",\"translucency_cache\":\"3\",\"translucency_color_color\":\"Color(1,1,1)\",\"translucency_color_tex\":\"\",\"translucency_color_tex_mult\":\"1\",\"translucency_color_tex_on\":\"1\"}}"
+      }
+    }
+  },
+  "note": "IngeTrazo 0.5.11 displays source per-face colors and metal/matte finishes; Enscape/VRay metadata is preserved, not rendered as light emission."
+}

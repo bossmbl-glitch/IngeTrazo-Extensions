@@ -1,0 +1,29 @@
+PASS test_geometry.py
+PASS test_v08.py
+PASS test_v09.py
+PASS test_v10.py
+PASS test_v11.py
+PASS test_v12.py
+PASS test_v13.py
+PASS test_v14.py
+PASS test_v15.py
+PASS test_v16.py
+SKIP test_v17.py: source v1.6 ZIP not supplied
+PASS test_v18.py
+PASS test_v181.py
+PASS test_v182.py
+PASS test_v19.py
+PASS test_v20.py
+PASS test_v201.py
+PASS test_v202.py
+PASS test_v203.py
+PASS test_v204.py
+PASS test_v205.py
+PASS test_v206.py
+PASS test_v210_mouse_geometry.py
+PASS test_v211_preferences.py
+PASS test_v213_experimental.py
+PASS test_v214_wall_aligned.py
+PASS test_v215_horizontal.py
+PASS baseline helper comparison: triangulation / edge display / path ordering unchanged
+未執行 Windows IngeTrazo 0.6.0 GUI 實測。

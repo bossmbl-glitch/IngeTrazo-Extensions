@@ -1,0 +1,18 @@
+IngeTrazo → D5 0.5.0：另一台電腦安裝／更新
+
+1. 關閉 IngeTrazo，將舊插件資料夾備份到 plugins 資料夾之外。
+2. 解開本 ZIP，把 ingetrazo_d5_livesync 資料夾複製到：
+   %APPDATA%\IngeTrazo\plugins\
+   更新時覆蓋同名資料夾。不要再多套一層壓縮包名稱。
+3. 安裝 Blender。已實測 4.5.4 LTS、5.2.3 LTS 的啟動與資料處理。
+4. 從 https://www.d5render.com/download 下載官方 D5 LiveSync for Blender，
+   關閉 Blender 後執行官方安裝包，為實際使用的 Blender 版本安裝。
+   不要將舊電腦／舊 Blender 的 d5_export 資料夾直接複製到新版本。
+5. 重開 IngeTrazo，按 D5 工具列「設定」，確認 Blender 執行檔與 D5 資料夾。
+   可按「重新偵測安裝位置」，非標準路徑也可用選擇按鈕指定。
+6. 按「D5」，等待啟動檢查；通過後會開始連接。
+   首次在 D5 完成模型關聯。燈光定位模型仍只留在 IngeTrazo。
+
+若仍不能開：按「複製診斷」，把文字貼回聊天。
+診斷包含版本、安裝路徑與錯誤日誌，不會自動上傳。
+0.5.0 不能替代 Blender、D5 或官方 Sync 的安裝；壓縮包不含這些第三方程式。

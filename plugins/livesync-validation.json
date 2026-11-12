@@ -1,0 +1,456 @@
+{
+  "date": "2026-11-09",
+  "bridge": "0.6.0",
+  "ingetrazo": "0.5.11",
+  "blender": [
+    "4.5.4 LTS",
+    "5.2.3 LTS"
+  ],
+  "d5": "3.1.1.0755",
+  "official_sync": "1.0.0.0028",
+  "unit_tests_passed": 9,
+  "reload_test": {
+    "passed": true,
+    "blender": "5.2.3 LTS",
+    "stages": [
+      {
+        "stage": 1,
+        "mesh_count": 1,
+        "stats": {
+          "objects": 1,
+          "faces": 6,
+          "components": 0,
+          "ambience": "day"
+        },
+        "d5_ids": [
+          "72d1174d3bb845b4906c3c5080a41ddc"
+        ]
+      },
+      {
+        "stage": 2,
+        "mesh_count": 1,
+        "stats": {
+          "objects": 1,
+          "faces": 6,
+          "components": 1,
+          "ambience": "day"
+        },
+        "d5_ids": [
+          "72d1174d3bb845b4906c3c5080a41ddc"
+        ]
+      },
+      {
+        "stage": 3,
+        "mesh_count": 0,
+        "stats": {
+          "objects": 0,
+          "faces": 0,
+          "components": 0,
+          "ambience": "day"
+        },
+        "d5_ids": []
+      }
+    ]
+  },
+  "benchmark": [
+    {
+      "triangles": 100,
+      "textures": 0,
+      "export_seconds": 0.11151210000389256,
+      "bytes": 83164,
+      "blender_import_seconds": 0.23084629999357276,
+      "stats": {
+        "objects": 1,
+        "faces": 100,
+        "components": 0,
+        "ambience": "day"
+      }
+    },
+    {
+      "triangles": 10000,
+      "textures": 0,
+      "export_seconds": 0.08083769999211654,
+      "bytes": 178402,
+      "blender_import_seconds": 0.3015960000047926,
+      "stats": {
+        "objects": 1,
+        "faces": 10000,
+        "components": 0
+      }
+    },
+    {
+      "triangles": 100000,
+      "textures": 0,
+      "export_seconds": 0.5639355999883264,
+      "bytes": 1772951,
+      "blender_import_seconds": 3.3132433999853674,
+      "stats": {
+        "objects": 1,
+        "faces": 100000,
+        "components": 0
+      }
+    }
+  ],
+  "benchmark_method": "Single run per size; synthetic untextured detached triangles. No D5 timing.",
+  "direct_official_cube_send_passed": true,
+  "bridge_end_to_end_passed": true,
+  "pending": "Live IngeTrazo panel interaction and complex textured project validation",
+  "toolbar_test": {
+    "passed": true,
+    "version": "0.6.0",
+    "host": "Installed IngeTrazo MainWindow and ExtensionApp",
+    "checks": [
+      "toolbar_visible",
+      "four_actions",
+      "settings_opens_panel",
+      "start_dispatch",
+      "update_dispatch",
+      "stop_dispatch",
+      "enabled_state",
+      "no_duplicate_toolbar"
+    ]
+  },
+  "lighting_toolbar_test": {
+    "passed": true,
+    "checks": [
+      "native_solid_proxies_three_types",
+      "native_move_all_types",
+      "native_selection_panel_link",
+      "native_delete_undo",
+      "property_edit_after_native_move",
+      "single_step_undo",
+      "nested_parent_world_transform",
+      "igz_proxy_roundtrip",
+      "snapshot_removes_proxy_geometry",
+      "normal_same_name_geometry_kept",
+      "live_scene_unchanged",
+      "group_edit_filter",
+      "group_edit_preserves_light_position",
+      "exploded_proxy_blocks_sync_after_reopen",
+      "native_move_tool_dispatch",
+      "custom_drag_disabled"
+    ]
+  },
+  "light_sender_test": {
+    "passed": true,
+    "checks": [
+      "strip_dimensions",
+      "transform_finite",
+      "add",
+      "unchanged_no_send",
+      "edit",
+      "owned_delete_only",
+      "toggle",
+      "recreate",
+      "disconnect_no_ack",
+      "duplicate_rejected",
+      "xyz_translation_all_types",
+      "stable_rotation_dimensions_identity",
+      "moved_light_sent"
+    ]
+  },
+  "d5_light_test": {
+    "phase": "complete",
+    "receipt": {
+      "official_return_code": 0,
+      "render_state": "D5RenderStatus.D5RenderInProject",
+      "send_calls": 1,
+      "light_count": 3,
+      "lights_changed": 3,
+      "lights_removed": 0
+    },
+    "update": {
+      "light_count": 3,
+      "lights_changed": 1,
+      "lights_removed": 0
+    },
+    "removed": {
+      "light_count": 2,
+      "lights_changed": 0,
+      "lights_removed": 1
+    },
+    "restored": {
+      "light_count": 3,
+      "lights_changed": 1,
+      "lights_removed": 0
+    },
+    "lights": [
+      {
+        "id": "e51fa4fb279c43e08753726738271daa",
+        "kind": "point",
+        "pos": [
+          -2.0,
+          0.0,
+          2.0
+        ],
+        "end": [
+          -1.0,
+          0.0,
+          2.0
+        ],
+        "name": "D5 點光",
+        "on": true,
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "brightness": 1000.0,
+        "kelvin": 4000.0,
+        "width": 0.05,
+        "angle": 60.0
+      },
+      {
+        "id": "e57a2642187e45a487f5855796079d13",
+        "kind": "spot",
+        "pos": [
+          2.0,
+          0.0,
+          3.0
+        ],
+        "end": [
+          3.0,
+          0.0,
+          3.0
+        ],
+        "name": "D5 聚光",
+        "on": true,
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "brightness": 1000.0,
+        "kelvin": 4000.0,
+        "width": 0.05,
+        "angle": 60.0
+      },
+      {
+        "id": "340deb7b5be8496ea98c69397b573db7",
+        "kind": "strip",
+        "pos": [
+          -1.0,
+          1.0,
+          2.0
+        ],
+        "end": [
+          2,
+          1,
+          2
+        ],
+        "name": "D5 燈條",
+        "on": true,
+        "direction": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "brightness": 1800.0,
+        "kelvin": 3000.0,
+        "width": 0.05,
+        "angle": 60.0
+      }
+    ]
+  },
+  "d5_light_visual_confirmed_by_user": true,
+  "d5_light_visual_confirmation_version": "0.3.0",
+  "movement_validation": "0.4.0 native proxy groups and host move commands; snapshot exclusion and real Blender import verified",
+  "proxy_blender_test": {
+    "passed": true,
+    "mesh_count": 2,
+    "polygon_count": 2,
+    "proxy_polygon_count": 0,
+    "stats": {
+      "objects": 3,
+      "faces": 2,
+      "components": 1,
+      "ambience": "day"
+    }
+  },
+  "portability_test": {
+    "passed": true,
+    "tests": 7
+  },
+  "preflight_tests": [
+    {
+      "ok": true,
+      "blender": "4.5.4 LTS",
+      "python": "3.11.11",
+      "addon_version": [
+        1,
+        0,
+        0,
+        28
+      ],
+      "adapter_initialized": true
+    },
+    {
+      "ok": true,
+      "blender": "5.2.3 LTS",
+      "python": "3.13.13",
+      "addon_version": [
+        1,
+        0,
+        0,
+        28
+      ],
+      "adapter_initialized": true
+    }
+  ],
+  "blender_52_live_d5_scene_send_verified": false,
+  "fixture_placement_test": {
+    "passed": true,
+    "checks": [
+      "four_fixture_one_group",
+      "second_batch_separate_group",
+      "duplicate_click_ignored",
+      "escape_keeps_lights",
+      "selected_batch_atomic_undo_redo",
+      "bottom_2mm",
+      "nested_world_bounds",
+      "geometric_center",
+      "point_spot_strip_options",
+      "linked_brightness_only_own_group",
+      "linked_on_off",
+      "single_edit_opt_out",
+      "linked_strip_length",
+      "igz_groups_roundtrip",
+      "proxy_exclusion_keeps_fixtures",
+      "invalid_selection_atomic",
+      "native_model_ray_pick_four_fixtures",
+      "nested_group_edit_placement",
+      "later_member_inherits_group_parameters"
+    ]
+  },
+  "group_sender_test": {
+    "passed": true,
+    "checks": [
+      "official_path_element_api",
+      "stable_group_ids",
+      "two_group_membership_4_and_2",
+      "full_batch_retains_other_group",
+      "owned_group_delete_only",
+      "group_rename_triggers_send",
+      "mixed_types_rejected",
+      "native_sdk_offline_registration"
+    ],
+    "live_d5_group_scene_verified": false,
+    "native_wire_payload_captured": false
+  },
+  "d5_group_scene_verified": false,
+  "d5_light_receiver": {
+    "passed": true,
+    "received_batch_sizes": [
+      3,
+      3,
+      2,
+      3
+    ],
+    "strip_actor": "PureNarrowAreaLight",
+    "final_strip": {
+      "brightness": 1800.0,
+      "id": "340deb7b5be8496ea98c69397b573db7",
+      "light_color": [
+        255.0,
+        177.0,
+        110.0
+      ],
+      "light_name": "D5 燈條",
+      "light_template": " ",
+      "path": "D5-light-test.blend/D5/340deb7b5be8496ea98c69397b573db7",
+      "size_x": 50.0,
+      "size_y": 3000.0,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        100.0,
+        50.0,
+        200.0,
+        1.0
+      ],
+      "type": 2,
+      "visible_in_reflection": 1
+    },
+    "visual_confirmed_by_user": true
+  },
+  "end_to_end": {
+    "passed": true,
+    "timings": [
+      {
+        "revision": 1,
+        "import_seconds": 0.009958199982065707,
+        "send_seconds": 0.2314574000192806,
+        "export_seconds": 0,
+        "snapshot_to_send_seconds": 1.5532898902893066,
+        "stats": {
+          "objects": 1,
+          "faces": 6,
+          "components": 0,
+          "ambience": "day"
+        },
+        "official_return_code": 0,
+        "render_state": "D5RenderStatus.D5RenderInProject",
+        "send_calls": 1
+      },
+      {
+        "revision": 2,
+        "import_seconds": 0.007229100010590628,
+        "send_seconds": 0.0738394999934826,
+        "export_seconds": 0,
+        "snapshot_to_send_seconds": 0.11052680015563965,
+        "stats": {
+          "objects": 1,
+          "faces": 6,
+          "components": 1,
+          "ambience": "day"
+        },
+        "official_return_code": 0,
+        "render_state": "D5RenderStatus.D5RenderInProject",
+        "send_calls": 2
+      },
+      {
+        "revision": 3,
+        "import_seconds": 0.004626700014341623,
+        "send_seconds": 0.026825499982805923,
+        "export_seconds": 0,
+        "snapshot_to_send_seconds": 0.10026025772094727,
+        "stats": {
+          "objects": 0,
+          "faces": 0,
+          "components": 0,
+          "ambience": "day"
+        },
+        "official_return_code": 0,
+        "render_state": "D5RenderStatus.D5RenderInProject",
+        "send_calls": 3
+      },
+      {
+        "revision": 4,
+        "import_seconds": 0.007261000020662323,
+        "send_seconds": 0.04744249998475425,
+        "export_seconds": 0,
+        "snapshot_to_send_seconds": 0.11111664772033691,
+        "stats": {
+          "objects": 1,
+          "faces": 6,
+          "components": 1,
+          "ambience": "day"
+        },
+        "official_return_code": 0,
+        "render_state": "D5RenderStatus.D5RenderInProject",
+        "send_calls": 4
+      }
+    ]
+  },
+  "d5_visual_confirmed_by_user": true
+}

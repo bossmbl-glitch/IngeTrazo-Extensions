@@ -1,0 +1,156 @@
+[
+  {
+    "id": "glass_new",
+    "title": "新增玻璃門",
+    "category": "門片與櫃體",
+    "description": "單扇／對開玻璃門、每扇1／2欄，中央把手對應並支援塊體轉換",
+    "icon": "tool_glass_new.png"
+  },
+  {
+    "id": "glass_edit",
+    "title": "玻璃門設定",
+    "category": "門片與櫃體",
+    "description": "對開總寬與門縫、玻璃欄數、厚度及把手，拉伸後兩扇等寬重建",
+    "icon": "tool_glass_edit.png"
+  },
+  {
+    "id": "louver_new",
+    "title": "新增百葉窗",
+    "category": "門片與櫃體",
+    "description": "新增可調尺寸、扇數、角度及葉片淨距的百葉窗",
+    "icon": "tool_louver_new.png"
+  },
+  {
+    "id": "louver_edit",
+    "title": "百葉窗設定",
+    "category": "門片與櫃體",
+    "description": "選取原有百葉窗，修改參數或設定同向／對向旋轉",
+    "icon": "tool_louver_edit.png"
+  },
+  {
+    "id": "decorative_new",
+    "title": "新增造型門片",
+    "category": "門片與櫃體",
+    "description": "造型門片與門框，支援把手左右換邊及上／中／下橫料中央安裝",
+    "icon": "tool_decorative_new.png"
+  },
+  {
+    "id": "decorative_edit",
+    "title": "造型門片設定",
+    "category": "門片與櫃體",
+    "description": "門片框料拉伸連動，正反面把手對齊與上／中／下橫料中央",
+    "icon": "tool_decorative_edit.png"
+  },
+  {
+    "id": "cabinet",
+    "title": "新增參數櫃體",
+    "category": "門片與櫃體",
+    "description": "原有／古典門片、抽屜、每片單雙把手與中心間距，支援量體轉換",
+    "icon": "tool_cabinet.png"
+  },
+  {
+    "id": "cabinet_edit",
+    "title": "櫃體設定",
+    "category": "門片與櫃體",
+    "description": "四邊框料、單雙把手及離地高度，拉伸同步與立面預覽",
+    "icon": "tool_cabinet_edit.png"
+  },
+  {
+    "id": "profile_library",
+    "title": "配件資料庫",
+    "category": "門片與櫃體",
+    "description": "線板剖面與把手元件，新增、預覽與選用",
+    "icon": "tool_profile_library.png"
+  },
+  {
+    "id": "cad_height",
+    "title": "CAD 圖層長高度",
+    "category": "試驗中",
+    "description": "依 CAD 圖層從封閉線框產生立體",
+    "icon": "tool_cad_height.png"
+  },
+  {
+    "id": "resize",
+    "title": "調整面／物件高度",
+    "category": "試驗中",
+    "description": "水平面調整標高；整個物件調整本身高度",
+    "icon": "tool_resize.png"
+  },
+  {
+    "id": "clearance",
+    "title": "物件離地高度",
+    "category": "高度與地板",
+    "description": "量測底部、頂部、中心高度，或垂直移動物件",
+    "icon": "tool_clearance.png"
+  },
+  {
+    "id": "floor",
+    "title": "產生輪廓地板",
+    "category": "試驗中",
+    "description": "依選取模型的最外圍輪廓產生地板",
+    "icon": "tool_floor.png"
+  },
+  {
+    "id": "center_object",
+    "title": "整體置中",
+    "category": "對齊與造型",
+    "description": "先選取要移動的物件，再點目標表面",
+    "icon": "tool_center_object.png"
+  },
+  {
+    "id": "center_face",
+    "title": "面置中",
+    "category": "對齊與造型",
+    "description": "以點選單一面的外框計算中心",
+    "icon": "tool_center_face.png"
+  },
+  {
+    "id": "ffd",
+    "title": "FFD 自由變形",
+    "category": "對齊與造型",
+    "description": "控制框 2×2×2／3×3×3，含鎖點與高面數模式",
+    "icon": "tool_ffd.png"
+  },
+  {
+    "id": "lathe",
+    "title": "Lathe 旋轉成形",
+    "category": "對齊與造型",
+    "description": "先選剖面線，設定旋轉軸並即時預覽",
+    "icon": "tool_lathe.png"
+  },
+  {
+    "id": "paint",
+    "title": "群組上色",
+    "category": "材質與匯出",
+    "description": "對選取群組上材質或使用隨機顏色",
+    "icon": "tool_paint.png"
+  },
+  {
+    "id": "export",
+    "title": "元件批次匯出",
+    "category": "材質與匯出",
+    "description": "試驗：選取群組分別或合併匯出 IGZ／SKP，保留原模型",
+    "icon": "tool_export.png"
+  },
+  {
+    "id": "cabinet_composite",
+    "title": "組合櫃",
+    "category": "試驗中",
+    "description": "試驗：矩形多區分割，各區可選門片、抽屜或開放，共用 3 cm 隔板",
+    "icon": "tool_cabinet_composite.png"
+  },
+  {
+    "id": "ffd_snap",
+    "title": "FFD 表面吸附",
+    "category": "試驗中",
+    "description": "將未鎖定控制點吸附到其他模型表面，確認後才寫入",
+    "icon": "tool_ffd_snap.png"
+  },
+  {
+    "id": "legacy_handles",
+    "title": "舊把手批次轉入",
+    "category": "試驗中",
+    "description": "掃描 handles.json 與對應 SKP，預覽清單後批次轉入",
+    "icon": "tool_legacy_handles.png"
+  }
+]

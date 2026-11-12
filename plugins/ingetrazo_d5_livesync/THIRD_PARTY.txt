@@ -1,0 +1,27 @@
+IngeTrazo → Blender → D5 LiveSync bridge 0.6.0
+
+Bridge source: GPL-3.0-or-later. See LICENSE.txt.
+The integrated lighting controls keep D5-specific light definitions in the
+host document and send them using the separately installed official D5 SDK.
+The host's original Render lights are not modified or automatically converted.
+
+Bundled importer: IngeTrazo Sync (.igz), version 0.4.0
+Copyright (C) 2026 Victor Crespo (3dvic.com · github.com/vicc3d)
+Source: https://github.com/vicc3d/ingetrazo-blender
+Location: vendor/ingetrazo_io/
+License: GPL-3.0-or-later. Upstream source headers and manifest are retained.
+The bundled importer files are unmodified. The bridge imports its build API;
+it does not register this package as a Blender extension. Upstream declares
+Blender 5.0 minimum; this bridge separately tests the import path on 4.5.4.
+
+External dependencies, not included in this package:
+- IngeTrazo 0.5.11 (its installed Python/Qt runtime runs the control panel)
+- Blender 4.5.4 LTS
+- Official D5 LiveSync for Blender 1.0.0.0028
+- D5 Render 3.1.1.0755
+
+Official D5 installer: https://www.d5render.com/workflow/blender
+The official addon and native SDK are installed separately under their own
+terms. This package does not redistribute them or edit their installed files.
+The adapter adjusts the official addon's behavior in a dedicated Blender
+worker process. This bridge is an independent integration, not a D5 product.

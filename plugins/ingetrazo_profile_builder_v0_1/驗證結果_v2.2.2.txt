@@ -1,0 +1,40 @@
+PASS test_geometry.py
+PASS test_v08.py
+PASS test_v09.py
+PASS test_v10.py
+PASS test_v11.py
+PASS test_v12.py
+PASS test_v13.py
+PASS test_v14.py
+PASS test_v15.py
+PASS test_v16.py
+SKIP test_v17.py：缺少歷史 v1.6 ZIP
+PASS test_v18.py
+PASS test_v181.py
+PASS test_v182.py
+PASS test_v19.py
+PASS test_v20.py
+PASS test_v201.py
+PASS test_v202.py
+PASS test_v203.py
+PASS test_v204.py
+PASS test_v205.py
+PASS test_v206.py
+PASS test_v210_mouse_geometry.py
+PASS test_v211_preferences.py
+PASS test_v213_experimental.py
+PASS test_v214_wall_aligned.py
+PASS test_v215_horizontal.py
+PASS test_v216_wall_frame.py
+PASS test_v220_dialog.py
+PASS test_v220_dpi.py
+PASS test_v220_integration.py
+PASS test_v221_stamp_face.py
+PASS test_v222_clean_edges.py
+PASS Qt scale 1.5
+PASS Qt scale 2
+語法檢查通過。
+使用 IngeTrazo v0.6.0 原始碼 e61132a7f8a098ca77fb6b0e7cac488c1bd410cb 的實際 Mesh/Group/History，搭配離屏 Qt 驗證。
+視覺檢查：圖庫卡片、主面板八顆按鈕與編輯屬性對話框。
+v2.1.6 掃掠與三角化幾何保持一致；v2.2.2 僅更新邊線顯示標記。
+未執行使用者 Windows 桌面的 OpenGL 視窗、真實滑鼠吸附或大型模型實測。

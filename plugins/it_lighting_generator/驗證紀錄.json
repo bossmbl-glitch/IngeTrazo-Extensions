@@ -1,0 +1,260 @@
+{
+  "plugin": "it_lighting_generator",
+  "version": "1.0.2",
+  "date": "2026-11-04",
+  "model_count": 21,
+  "method": "Offscreen regression tests plus native installed IngeTrazo with NVIDIA OpenGL and Rust engine; no local SketchUp used.",
+  "live_user_window_tested": false,
+  "suites": [
+    {
+      "ingetrazo_version": "0.5.11",
+      "commit": "a369d1ed1bf3567f98045113b6a64df23b8d5f43",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "38",
+      "time": "22.394",
+      "timestamp": "2026-11-04T17:18:35.076792+08:00",
+      "hostname": "MV120"
+    },
+    {
+      "ingetrazo_version": "0.6.0",
+      "commit": "e61132a7f8a098ca77fb6b0e7cac488c1bd410cb",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "38",
+      "time": "22.987",
+      "timestamp": "2026-11-04T17:18:57.863686+08:00",
+      "hostname": "MV120"
+    }
+  ],
+  "native_binary_probe": {
+    "engine": "Rust",
+    "style": "Style(name='Default', face_mode='textures', edges=True, profiles=True, back_edges=False, edge_color=(0.13, 0.17, 0.23), front_color=(1.0, 1.0, 1.0), back_color=None, background=(0.9, 0.91, 0.92), sky=True, sky_color=(0.925, 0.935, 0.945), ground_color=(0.815, 0.82, 0.815), section_fill=True, section_fill_color=(0.35, 0.37, 0.41), ambient_occlusion=False, ao_distance=0.5, ao_intensity=1.0, color_by_layer=False)",
+    "preview_vertices": 439716,
+    "preview_on": true,
+    "groups": [
+      "工程师",
+      "QA1_N2"
+    ],
+    "history_error": null,
+    "preview_cleared": true,
+    "errors": {},
+    "bars": [
+      [
+        "it_lighting_generator_toolbar",
+        true,
+        [
+          567,
+          59,
+          1353,
+          43
+        ],
+        [
+          [
+            "燈具生成器…",
+            false
+          ]
+        ]
+      ]
+    ]
+  },
+  "geometry_update": [
+    {
+      "model": "C1",
+      "removed_faces": 0,
+      "guide_edges": 208,
+      "guide_faces": 0
+    },
+    {
+      "model": "C5",
+      "removed_faces": 0,
+      "guide_edges": 196,
+      "guide_faces": 0
+    },
+    {
+      "model": "M2",
+      "removed_faces": 0,
+      "guide_edges": 202,
+      "guide_faces": 0
+    },
+    {
+      "model": "M5_25",
+      "removed_faces": 0,
+      "guide_edges": 208,
+      "guide_faces": 0
+    },
+    {
+      "model": "M8",
+      "removed_faces": 0,
+      "guide_edges": 200,
+      "guide_faces": 0
+    },
+    {
+      "model": "M8_N3",
+      "removed_faces": 0,
+      "guide_edges": 638,
+      "guide_faces": 0
+    },
+    {
+      "model": "QA1_F1",
+      "removed_faces": 1,
+      "guide_edges": 132,
+      "guide_faces": 0
+    },
+    {
+      "model": "QA1_F2",
+      "removed_faces": 1,
+      "guide_edges": 245,
+      "guide_faces": 0
+    },
+    {
+      "model": "QA1_F3",
+      "removed_faces": 1,
+      "guide_edges": 358,
+      "guide_faces": 0
+    },
+    {
+      "model": "QA1_N1",
+      "removed_faces": 1,
+      "guide_edges": 104,
+      "guide_faces": 0
+    },
+    {
+      "model": "QA1_N2",
+      "removed_faces": 1,
+      "guide_edges": 200,
+      "guide_faces": 0
+    },
+    {
+      "model": "QA1_N3",
+      "removed_faces": 1,
+      "guide_edges": 296,
+      "guide_faces": 0
+    },
+    {
+      "model": "QC1_F1",
+      "removed_faces": 0,
+      "guide_edges": 216,
+      "guide_faces": 0
+    },
+    {
+      "model": "QC1_F2",
+      "removed_faces": 0,
+      "guide_edges": 420,
+      "guide_faces": 0
+    },
+    {
+      "model": "QC1_F3",
+      "removed_faces": 0,
+      "guide_edges": 624,
+      "guide_faces": 0
+    },
+    {
+      "model": "QC1_N1",
+      "removed_faces": 0,
+      "guide_edges": 212,
+      "guide_faces": 0
+    },
+    {
+      "model": "QC1_N2",
+      "removed_faces": 0,
+      "guide_edges": 416,
+      "guide_faces": 0
+    },
+    {
+      "model": "QC1_N3",
+      "removed_faces": 0,
+      "guide_edges": 620,
+      "guide_faces": 0
+    },
+    {
+      "model": "QM5_25_F1",
+      "removed_faces": 1,
+      "guide_edges": 224,
+      "guide_faces": 0
+    },
+    {
+      "model": "QM5_25_F2",
+      "removed_faces": 1,
+      "guide_edges": 431,
+      "guide_faces": 0
+    },
+    {
+      "model": "QM5_25_F3",
+      "removed_faces": 1,
+      "guide_edges": 638,
+      "guide_faces": 0
+    }
+  ],
+  "native_geometry_probes": [
+    {
+      "engine": "Rust",
+      "style": "Style(name='Default', face_mode='textures', edges=True, profiles=True, back_edges=False, edge_color=(0.13, 0.17, 0.23), front_color=(1.0, 1.0, 1.0), back_color=None, background=(0.9, 0.91, 0.92), sky=True, sky_color=(0.925, 0.935, 0.945), ground_color=(0.815, 0.82, 0.815), section_fill=True, section_fill_color=(0.35, 0.37, 0.41), ambient_occlusion=False, ao_distance=0.5, ao_intensity=1.0, color_by_layer=False)",
+      "model": "QA1_F2",
+      "preview_vertices": 439854,
+      "preview_on": true,
+      "groups": [
+        "工程师",
+        "QA1_F2"
+      ],
+      "history_error": null,
+      "preview_cleared": true,
+      "errors": {},
+      "bars": [
+        [
+          "it_lighting_generator_toolbar",
+          true,
+          [
+            567,
+            59,
+            1353,
+            43
+          ],
+          [
+            [
+              "燈具生成器…",
+              false
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "engine": "Rust",
+      "style": "Style(name='Default', face_mode='textures', edges=True, profiles=True, back_edges=False, edge_color=(0.13, 0.17, 0.23), front_color=(1.0, 1.0, 1.0), back_color=None, background=(0.9, 0.91, 0.92), sky=True, sky_color=(0.925, 0.935, 0.945), ground_color=(0.815, 0.82, 0.815), section_fill=True, section_fill_color=(0.35, 0.37, 0.41), ambient_occlusion=False, ao_distance=0.5, ao_intensity=1.0, color_by_layer=False)",
+      "model": "QM5_25_F2",
+      "preview_vertices": 18174,
+      "preview_on": true,
+      "groups": [
+        "工程师",
+        "QM5_25_F2"
+      ],
+      "history_error": null,
+      "preview_cleared": true,
+      "errors": {},
+      "bars": [
+        [
+          "it_lighting_generator_toolbar",
+          true,
+          [
+            567,
+            59,
+            1353,
+            43
+          ],
+          [
+            [
+              "燈具生成器…",
+              false
+            ]
+          ]
+        ]
+      ]
+    }
+  ],
+  "source_model_sha256": "46106512a6ce4c05beb28deeccd589a45a1f574763fef7877938f73185d7607c"
+}

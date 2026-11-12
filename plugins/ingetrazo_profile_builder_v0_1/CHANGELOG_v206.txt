@@ -1,0 +1,7 @@
+v2.0.6 - 剖面資料庫刪除及 Qt 圖示相容修正
+
+1. 修復刪除後重繪剖面卡片時的 AttributeError：QCommonStyle 沒有 SP_DirIcon。
+2. 同步修正 SP_FileIcon、SP_MessageBoxWarning，統一使用 QStyle.StandardPixmap。
+3. 保留既有剖面檔備份、最近使用記錄更新以及內建剖面僅隱藏的策略。
+4. 不修改線板建模、轉角幾何、比例縮放等核心程式。
+5. 離線語法、圖示回歸、磁碟資料庫測試通過；Windows IngeTrazo 0.6.0 需實機驗證。

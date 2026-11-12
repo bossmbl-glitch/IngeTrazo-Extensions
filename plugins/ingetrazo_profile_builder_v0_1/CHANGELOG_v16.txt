@@ -1,0 +1,7 @@
+v1.6 - SKP profile browsing / read-only extraction
+- ProfileBrowser scans .skp along with .json files.
+- Deferred preview thumbnails generated via native IngeTrazo SKP parsing seam.
+- Simple connected coplanar face boundary reconstruction, no 3D models or holes.
+- Loaded profiles become editable Quick Profile polygons in the user's own library.
+- Preserve the v1.5 UI and v1.4 mesh/sweep geometry.
+- Limitations: only qualified simple 2D profile files; Windows runtime verification pending.
