@@ -60,6 +60,7 @@ REASONS={'first_full_sync':'本次連線首次完整同步','requested_full_upda
          'group_structure_changed':'新增、刪除或群組階層已變更','group_structure_or_metadata_changed':'群組識別、階層、圖層或屬性已變更',
          'global_settings_changed':'全域設定或圖層模式已變更','loose_geometry_changed':'未分組網格識別或修改序號變動，內容範圍尚未確認',
          'acknowledged_state_unchanged':'內容與本連線已成功確認版本相同，略過重複傳送',
+         'certified_tracking_only':'確認沒有可見模型變動，只更新追蹤基準，略過傳送',
          'loose_material_changed':'材質變動影響未分組幾何','partial_scope_too_broad':'影響群組過多，完整更新較合適',
          'texture_file_changed':'既有貼圖檔案已變更','no_local_visual_change':'沒有可獨立更新的可見群組變動',
          'group_edit_context':'正在編輯群組內部','certified_local_change':'已確認受影響群組，使用局部更新',
@@ -76,6 +77,12 @@ def decision_text(decision):
           '更新方式：'+routes.get(decision.get('route'),'等待判定'),'原因：'+decision_reason(decision)]
     if decision.get('receiver_reason'):rows.append('接收端原因：'+str(decision['receiver_reason']))
     if decision.get('trigger'):rows.append('觸發來源：'+decision['trigger'])
+    check=decision.get('skip_check',{})
+    if check and not check.get('unchanged'):
+        if check.get('reason'):rows.append('略過檢查未通過：'+str(check['reason']))
+        if check.get('changed_checks'):rows.append('追蹤差異：'+'、'.join(check['changed_checks']))
+        if check.get('environment_fields'):rows.append('場景差異欄位：'+'、'.join(check['environment_fields']))
+        if check.get('dependency_count'):rows.append('貼圖檔案檢查差異：'+str(check['dependency_count'])+' 項')
     for item in decision.get('commands',[]):
         rows.append('操作：'+str(item.get('action',''))+'／'+str(item.get('command','')))
         if item.get('face_count'):rows.append('  操作面數：'+str(item['face_count']))
@@ -101,7 +108,7 @@ def performance_text(performance):
     def seconds(name):
         value=timing.get(name)
         return f'{value:.3f} 秒' if isinstance(value,(int,float)) else '未量測'
-    rows=['同步效能摘要','版本：0.9.10-test.1',
+    rows=['同步效能摘要','版本：0.9.10-test.2',
           '提交版本：'+str(performance.get('revision','—')),
           '本次嘗試：'+str(performance.get('attempt','—')),
           '類型：'+('本次背景程序首次傳送' if performance.get('initial_connection') else '後續更新'),
