@@ -1,0 +1,13 @@
+IngeTrazo-D5-LiveSync 0.9.10-test.2（測試版，2026-11-13）
+目標：Windows／IngeTrazo 0.6.0／現有 Blender、D5 與官方 D5 Sync。
+
+1. 停止同步，關閉 IngeTrazo。先備份 IGZ、D5 專案，將原 ingetrazo_d5_livesync 資料夾備份至 plugins 之外，標示 test.1。
+2. 把包內 ingetrazo_d5_livesync 資料夾放到 %APPDATA%\IngeTrazo\plugins\，取代同名資料夾，不要額外套一層 ZIP 名稱。
+3. 不刪除 %LOCALAPPDATA%\IngeTrazoD5Bridge 專案資料、不重建原 D5 物件關聯，不更換材質工作室、Blender 或 SDK。
+4. 重開 IngeTrazo，診斷確認 bridge=0.9.10-test.2，沿用原安裝路徑。開啟 D5，開始同步，等待首次完整同步與保存成功。
+5. 要驗收局部更新，開始前保持「局部形狀／材質更新」開啟。依 01_六項驗收清單.txt 測試；視角與空更新不應進入模型匯出。
+6. 若關閉 D5：預期顯示停止，尚未確認內容保留。重開 D5 後，等橋接自己的 Blender 結束，再按 D5 開始重新連線；不需要重開 IngeTrazo。
+7. 驗收後匯出診斷 ZIP。test.2 新增 skip_check（差異細項）與 d5_monitor（關閉監測是否已就緒）。
+
+回復：停止同步、關閉 IngeTrazo，把 test.2 資料夾移出 plugins，還原備份的完整 test.1 資料夾；保留原專案關聯並重新完整同步。若測試時改過模型，從備份專案恢復所需內容。
+本包沒有正式發布、沒有 main 合併，也不包含任何官方 D5 SDK 或第三方安裝程式。

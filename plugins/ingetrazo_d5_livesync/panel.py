@@ -40,6 +40,7 @@ class SyncPanel(QWidget):
         self.last_error=''
         self.source_recorder=None
         self.motion_certificate=None;self.force_full_next=False
+        self.renderer_watch=None;self.stop_reason='';self.preview_was_active=False
         self.settings = QSettings("IngeTrazo", "D5LiveSyncBridge")
         self.schedule = SyncSchedule(self.settings.value("paused", False, type=bool))
         self.retry_request = 0
@@ -209,6 +210,7 @@ class SyncPanel(QWidget):
         from .layer_scope import host_policy
         data={'compact_legacy_materials':self.compact_materials.isChecked(),'layer_sync_modes':host_policy(self.app.scene),'bridge':__version__,'blender':self.blender.text(),'d5':self.d5.text(),'error':self.last_error,'status':self.status.text()}
         data['source_diagnostic_errors']=list(self.source_recorder.errors) if self.source_recorder else []
+        data['d5_monitor']=self.renderer_watch.report() if self.renderer_watch else {'armed':False}
         if self.session:
             data.update(preflight=read_json(self.session.directory/'preflight.json',{}),worker=read_json(self.session.directory/'status.json',{}),
                         performance=read_json(self.session.directory/'performance-latest.json',{}),log_tail=self.log_tail())
@@ -311,6 +313,8 @@ class SyncPanel(QWidget):
         self.log_file=(self.session.directory/'worker.log').open('a',encoding='utf-8')
         self.process=launch(clean_path(self.blender.text()),Path(__file__).parent/'worker.py',self.session.directory,self.log_file)
         self.running=True;self.checking=False;self.dirty_at=None
+        from .renderer_watch import RendererWatch
+        self.renderer_watch=RendererWatch();self.stop_reason='';self.preview_was_active=False
         from .host_motion import MotionCertificate
         self.motion_certificate=MotionCertificate(self.app)
         self.session.motion_certificate=self.motion_certificate
@@ -439,6 +443,21 @@ class SyncPanel(QWidget):
                 self.buttons()
             return
         state = read_json(self.session.directory / "status.json", {})
+        if self.cancelled:
+            if self.process.poll() is not None:
+                self.timer.stop()
+                if self.log_file:self.log_file.close();self.log_file=None
+            self.buttons()
+            return
+        if self.running and self.renderer_watch and self.renderer_watch.closed(clean_path(self.d5.text()),time.monotonic()):
+            if self.source_recorder:
+                self.source_recorder.event('d5_closed',revision=self.session.revision,
+                                           acknowledged_revision=self.session.acknowledged,pending=self.session.pending)
+            if self.session.pending:self.schedule.changed(time.monotonic())
+            self.stop(reason='D5 已關閉，同步已停止；尚未確認的修改會在重新連線時重新同步。')
+            return
+        from .host_activity import preview_active
+        editing=preview_active(getattr(self.app,'viewport',None))
         if state:
             try:
                 self.session.acknowledge(state)
@@ -448,6 +467,8 @@ class SyncPanel(QWidget):
                 return
             if (state.get('phase')=='need_full' and state.get('processing_revision')==self.session.revision
                     and read_json(self.session.directory/'latest.json',{}).get('kind') in ('transforms','partial')
+                    and not editing and not QApplication.mouseButtons()
+                    and QApplication.activeModalWidget() is None
                     and not self.exporting and time.monotonic()>=self.schedule.retry_at):
                 try:
                     self.publish(replace_pending=True);self.retry_request+=1;self.write_control()
@@ -495,9 +516,13 @@ class SyncPanel(QWidget):
         if not self.matches():
             self.stop()
             return
-        if QApplication.mouseButtons() or QApplication.activeModalWidget() is not None:
+        if editing or QApplication.mouseButtons() or QApplication.activeModalWidget() is not None:
+            if editing and not self.preview_was_active and self.source_recorder:
+                self.source_recorder.event('preview_deferred',tool=type(self.app.viewport.active_tool).__name__)
+            self.preview_was_active=editing
             self.schedule.changed_at = time.monotonic()
             return
+        self.preview_was_active=False
         now = time.monotonic()
         if now - self.last_export < 1.0:
             return
@@ -508,10 +533,11 @@ class SyncPanel(QWidget):
             self.status.setText("快照失敗，未傳送；保留修改並稍後重試：" + str(exc))
             self.status.setStyleSheet('color: #c33;')
 
-    def stop(self, force=False):
+    def stop(self, force=False,reason=''):
         if self.motion_certificate:self.motion_certificate.close();self.motion_certificate=None
         self.cancelled=True;self.checking=False
-        self.progress.stop()
+        self.stop_reason=reason
+        self.progress.stop(reason)
         self.running = False
         self.dirty_at = None
         if self.session:
@@ -528,6 +554,7 @@ class SyncPanel(QWidget):
                 # code is blocked and cannot consume the stop request.
                 QTimer.singleShot(3000, lambda p=process: p.terminate() if p.poll() is None else None)
         self.buttons()
+        if reason:self.status.setText(reason)
 
     def shutdown(self):
         self.stop(force=True)

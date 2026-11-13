@@ -69,7 +69,7 @@ class SnapshotSession:
         self.motion_candidate_revision=0;self.motion_base_hash=None;self.motion_protocol=False;self.last_fallback_reason='first_full_sync'
         self.partial_enabled=False;self.partial_protocol=False;self.motion_enabled=True
         write_json(self.directory / "owner.json", {
-            "plugin": "ingetrazo_d5_livesync", "version": "0.9.10-test.1",
+            "plugin": "ingetrazo_d5_livesync", "version": "0.9.10-test.2",
             "parent_pid": os.getpid(), "created": time.time(),
         })
 
@@ -87,19 +87,33 @@ class SnapshotSession:
             receiver_reason=state.get('message','')
         if self.pending and not replace_pending:
             raise RuntimeError("上一版尚未收到 D5 傳送成功回報")
+        receipt_ready=False
+        skip_check={'unchanged':False,'reason':'no_confirmed_baseline'}
         if not force_full and not replace_pending and self.motion_baseline is not None and self.motion_certificate is not None:
             state=read_json(self.directory/'status.json',{})
-            if (self.acknowledged==self.revision and self.revision>0
+            receipt_ready=(self.acknowledged==self.revision and self.revision>0
                     and state.get('phase') in ('sent','idle') and state.get('official_return_code')==0
                     and state.get('acknowledged_revision')==self.revision
-                    and state.get('model_sha256')==self.motion_base_hash):
-                try:unchanged=self.motion_certificate.unchanged(self.motion_baseline)
-                except (ValueError,AttributeError,TypeError):unchanged=False
-                if unchanged:
+                    and state.get('model_sha256')==self.motion_base_hash)
+            if receipt_ready:
+                try:skip_check=self.motion_certificate.unchanged_report(self.motion_baseline)
+                except (ValueError,AttributeError,TypeError) as exc:
+                    skip_check={'unchanged':False,'reason':'inspection_unavailable','detail':str(exc)}
+                if skip_check['unchanged']:
                     return {'revision':self.revision,'kind':'skipped','bytes':0,'export_seconds':0.,
                             'sync_decision':{'route':'skipped','reason':'acknowledged_state_unchanged',
-                                             'commands':[],'baseline_revision':self.acknowledged}}
-        if on_export is not None:on_export()
+                                             'commands':[],'baseline_revision':self.acknowledged,'skip_check':skip_check}}
+            else:
+                skip_check={'unchanged':False,'reason':'receiver_not_confirmed','phase':state.get('phase'),
+                            'acknowledged_revision':state.get('acknowledged_revision'),
+                            'model_hash_matches':state.get('model_sha256')==self.motion_base_hash}
+        if force_full or replace_pending:skip_check={'unchanged':False,'reason':'forced_full' if force_full else 'receiver_need_full'}
+        export_begun=False
+        def begin_export():
+            nonlocal export_begun
+            if not export_begun:
+                export_begun=True
+                if on_export is not None:on_export()
         started = time.perf_counter()
         number = self.revision if replace_pending else self.revision + 1
         certificate=self.motion_certificate
@@ -111,12 +125,13 @@ class SnapshotSession:
                 from .layer_scope import host_policy
                 payload={'protocol':1,'base_revision':self.acknowledged,'base_model_sha256':self.motion_base_hash,
                          'layer_policy':host_policy(scene),'changes':changes}
+                begin_export()
                 target=self.directory/f'transforms-{number:08d}.json';write_json(target,payload)
                 manifest={'revision':number,'kind':'transforms','file':target.name,'published_at':time.time(),
                           'export_seconds':time.perf_counter()-started,'bytes':target.stat().st_size,
                           'source_fast_path':True,'changed_groups':len(changes),'snapshot_filter_seconds':0.,
                           'snapshot_serialize_seconds':0.,'snapshot_validate_seconds':0.,
-                          'sync_decision':{'route':'transforms','reason':'certified_placement','commands':certificate.history_since(self.motion_baseline)}}
+                          'sync_decision':{'route':'transforms','reason':'certified_placement','skip_check':skip_check,'commands':certificate.history_since(self.motion_baseline)}}
                 manifest.update(export_seconds=time.perf_counter()-started,published_at=time.time())
                 write_json(self.directory/'latest.json',manifest)
                 self.motion_candidate=candidate;self.motion_candidate_revision=number;self.revision=number
@@ -129,8 +144,16 @@ class SnapshotSession:
                 roots,current=certificate.partial_plan(self.motion_baseline)
             except (ValueError,AttributeError,TypeError) as exc:partial_reason=str(exc)
             else:
+                if not roots and receipt_ready and certificate.tracking_only(self.motion_baseline,current):
+                    commands=certificate.history_since(self.motion_baseline)
+                    current['dependencies']=self.motion_baseline['dependencies']
+                    self.motion_baseline=current;self.motion_candidate=current
+                    return {'revision':self.revision,'kind':'skipped','bytes':0,'export_seconds':0.,
+                            'sync_decision':{'route':'skipped','reason':'certified_tracking_only',
+                                             'baseline_revision':self.acknowledged,'commands':commands,'skip_check':skip_check}}
                 from .local_update import export_roots
                 from .layer_scope import host_policy
+                begin_export()
                 target=self.directory/f'partial-{number:08d}.igz'
                 export_roots(scene,roots,current,exporter,target,self.acknowledged,self.motion_base_hash,host_policy(scene))
                 candidate=certificate.capture(with_dependencies=True,allow_edit=True)
@@ -139,12 +162,13 @@ class SnapshotSession:
                           'export_seconds':time.perf_counter()-started,'bytes':target.stat().st_size,'source_fast_path':True,
                           'partial_roots':len(roots),'snapshot_filter_seconds':0.,'snapshot_serialize_seconds':0.,'snapshot_validate_seconds':0.,
                           'sync_decision':{**certificate.describe(self.motion_baseline,'certified_local_change' if roots else 'no_local_visual_change'),'route':'partial','root_keys':roots,
-                                           'root_names':[r['name'] for r in current['groups'] if r['key'] in roots]}}
+                                           'root_names':[r['name'] for r in current['groups'] if r['key'] in roots],'skip_check':skip_check}}
                 manifest.update(export_seconds=time.perf_counter()-started,published_at=time.time())
                 write_json(self.directory/'latest.json',manifest)
                 self.motion_candidate=candidate;self.motion_candidate_revision=number;self.revision=number
                 return manifest
         before_cv=getattr(scene,'content_version',None)
+        begin_export()
         target = self.directory / f"snapshot-{number:08d}.igz"
         # The host temporarily puts the edited group's mesh in scene.mesh.
         # Save the document root without leaving edit mode or mutating the host.
@@ -179,7 +203,7 @@ class SnapshotSession:
         manifest = {"revision": number, "layer_policy": policy, "d5_light_layers": layers, "file": target.name,
                     "kind":"full","source_fast_path":False,"fast_fallback_reason":self.last_fallback_reason,
                     "sync_decision":{**(certificate.describe(self.motion_baseline,self.last_fallback_reason) if certificate else {'reason':self.last_fallback_reason}),
-                                     'route':'full','partial_reason':partial_reason,'receiver_reason':receiver_reason},
+                                     'route':'full','partial_reason':partial_reason,'receiver_reason':receiver_reason,'skip_check':skip_check},
                     "published_at": time.time(),
                     "export_seconds": time.perf_counter() - started,
                     "bytes": target.stat().st_size, "d5_lights": lights, "d5_light_ids": light_ids,

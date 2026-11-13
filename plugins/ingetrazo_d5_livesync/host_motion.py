@@ -121,13 +121,12 @@ class MotionCertificate:
         return type(command) is self.compound and bool(command.commands) and all(self._local(c) for c in command.commands)
 
     def _studio_paint(self,command):
-        # Fail closed for other plugins, subclasses, changed source or edit mode.
+        # Fail closed for other plugins, subclasses or changed source. Native
+        # History restores the command mesh for undo/redo after leaving edit.
         # Reviewed engine's _put bumps scene.mesh even with no loose face edits.
         cls=type(command);module=sys.modules.get(cls.__module__)
         if (cls.__module__!='ingetrazo_plugin_it_material_studio.engine' or cls.__name__!='PaintCommand'
-                or getattr(module,'PaintCommand',None) is not cls
-                or getattr(self.scene,'edit_group',None) is not None
-                or self.scene.mesh is not self.scene.loose_mesh):return False
+                or getattr(module,'PaintCommand',None) is not cls):return False
         try:
             source=Path(module.__file__).read_text(encoding='utf-8').replace('\r\n','\n')
             return hashlib.sha256(source.encode()).hexdigest()=='d18b80b8a43ab1a093288978b6bf4cda85f4359a495eaac697eb64323b32dd2a'
@@ -239,7 +238,9 @@ class MotionCertificate:
         environment={'layers':getattr(self.scene,'layers',[]),
             'plugin_data':getattr(self.scene,'plugin_data',{}),'ambience':getattr(self.scene,'ambience',None),
             'kept':[(id(g),id(g.mesh)) for g in getattr(self.scene,'kept_components',[])]}
-        for key in ('camera_home','saved_views','image_planes','shadows','units','active_layer',
+        # camera_home follows navigation in the host and is not a model edit.
+        # Explicit saved views and scene settings retain their existing guards.
+        for key in ('saved_views','image_planes','shadows','units','active_layer',
                     'layer_folders','back_face_color','display_style'):
             environment[key]=getattr(self.scene,key,None)
         global_state=frozen({'materials':getattr(self.scene,'materials',{}),**environment})
@@ -282,9 +283,32 @@ class MotionCertificate:
 
     def unchanged(self,baseline):
         """Skip only an exact, acknowledged host state, including dependencies."""
+        return self.unchanged_report(baseline)['unchanged']
+
+    def unchanged_report(self,baseline):
         current=self.capture(allow_edit=True)
         keys=('cv','epoch','local_epoch','trace_sequence','global','loose','groups')
-        return (all(current[k]==baseline[k] for k in keys)
+        changed=[k for k in keys if current[k]!=baseline[k]]
+        before=json.loads(baseline['environment']);after=json.loads(current['environment'])
+        environment_fields=sorted(k for k in set(before)|set(after) if before.get(k)!=after.get(k))
+        dependencies=[{'file':Path(p).name,'reason':'unavailable' if stamp is None or self._stat(p) is None else 'changed'}
+                      for p,stamp in baseline['dependencies'].items() if stamp is None or self._stat(p)!=stamp]
+        group_checks=[]
+        for a,b in zip(baseline['groups'],current['groups']):
+            if a==b:continue
+            left=json.loads(a['metadata']);right=json.loads(b['metadata'])
+            group_checks.append({'key':a['key'],'name':b['name'],
+                                 'fields':[k for k in ('identity','parent','path','key','root_layer','invariant','xform') if a[k]!=b[k]],
+                                 'metadata_fields':sorted(k for k in set(left)|set(right) if left.get(k)!=right.get(k))})
+        return {'unchanged':not changed and not dependencies,'changed_checks':changed,
+                'environment_fields':environment_fields,'dependency_count':len(dependencies),
+                'dependencies':dependencies[:20],'group_checks':group_checks[:30],
+                'content_versions':{'before':baseline['cv'],'after':current['cv']}}
+
+    def tracking_only(self,baseline,current):
+        # Called only after partial_plan has certified the command history.
+        # Rebase host tracking alone; keep the receiver's revision/hash intact.
+        return (all(current[k]==baseline[k] for k in ('environment','groups','loose'))
                 and all(stamp is not None and self._stat(p)==stamp for p,stamp in baseline['dependencies'].items()))
 
     def partial_plan(self,baseline):
