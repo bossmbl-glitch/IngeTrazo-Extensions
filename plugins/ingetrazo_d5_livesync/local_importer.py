@@ -60,6 +60,8 @@ def load_local(importer,context,path,keys,document=None):
         importer.geometry_cache=next_cache
         importer.meshes={k:v for k,v in importer.meshes.items() if alive(v[0]) and v[0].users>0}
         importer.materials={k:v for k,v in importer.materials.items() if alive(v)}
+        from material_identity import retain_material_identities
+        builder.stats['identity_materials_retained']=retain_material_identities(bpy.data.materials,builder.doc_path)
         stats=builder.stats;stats['objects_touched']=stats.pop('objects');stats['faces_processed']=stats.pop('faces')
         stats.update(doc.geometry_stats);stats.update(partial_import=True,partial_roots=len(selected),
                     parse_seconds=parsed-started,build_seconds=time.perf_counter()-parsed)

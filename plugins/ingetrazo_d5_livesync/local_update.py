@@ -4,10 +4,10 @@ import copy,hashlib,json,zipfile,shutil
 from pathlib import Path
 try:
     from .motion_delta import DeltaRejected
-    from .layer_scope import Bundle,Composer,META
+    from .layer_scope import Bundle,Composer,META,MATERIAL_BINDINGS
 except ImportError:
     from motion_delta import DeltaRejected
-    from layer_scope import Bundle,Composer,META
+    from layer_scope import Bundle,Composer,META,MATERIAL_BINDINGS
 
 TAG='_bridge_partial'
 
@@ -19,9 +19,15 @@ def export_roots(scene,keys,state,exporter,target,base_revision,base_hash,policy
     snapshot.groups=[g for g,r in zip(scene.groups,rows) if r['key'] in keys]
     snapshot.layers=scene.layers
     used=set()
+    def material_references(value):
+        if isinstance(value,dict):
+            if isinstance(value.get('mat'),str):used.add(value['mat'])
+            for item in value.values():material_references(item)
+        elif isinstance(value,(list,tuple)):
+            for item in value:material_references(item)
     def references(g):
-        used.add((getattr(g,'material',None) or {}).get('mat'))
-        used.update(f.attrs.get('mat') for f in g.mesh.faces)
+        material_references(getattr(g,'material',None))
+        for f in g.mesh.faces:material_references(f.attrs)
         for c in g.children:references(c)
     for g in snapshot.groups:references(g)
     snapshot.materials={k:v for k,v in scene.materials.items() if k in used}
@@ -89,7 +95,7 @@ def prepare_local(baseline,source,ack,output,cache):
         isolate=any(meta.get('policy',{}).get(g.get('layer') or 'Layer 0')=='hold' for g in old.values()) or meta.get('policy',{}).get('Layer 0')=='hold'
         composer=Composer(isolate,previous)
         composer.members=dict(members);composer.protos=list(previous.scene.get('protos',[]))
-        replacements={key:composer.convert(g,incoming,True) for key,g in selected}
+        replacements={key:composer.convert_root(g,incoming,True) for key,g in selected}
         composer.registry(incoming)
         # Retain every unaffected document node and asset exactly; only newly
         # selected groups go through material/resource conversion.
@@ -99,6 +105,7 @@ def prepare_local(baseline,source,ack,output,cache):
         registry={m['name']:m for m in previous.scene.get('materials',[]) if isinstance(m,dict)}
         registry.update(composer.materials);scene['materials']=list(registry.values())
         updated_meta=copy.deepcopy(meta);out[META]=updated_meta;updated_meta['partial_depth']=meta.get('partial_depth',0)+1
+        updated_meta[MATERIAL_BINDINGS]=composer.binding_ledger()
         with zipfile.ZipFile(baseline) as z:origin_bytes=meta.get('partial_origin_bytes',sum(i.file_size for i in z.infolist()))
         updated_meta['partial_origin_bytes']=origin_bytes
         ledger=updated_meta.setdefault('material_aliases_v2',{})

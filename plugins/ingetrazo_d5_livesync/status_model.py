@@ -17,6 +17,7 @@ class StatusModel:
     def __init__(self):
         self.target=0;self.started=None;self.finished=None;self.last_activity=None
         self.token=None;self.source_error='';self.explicit_stop=False;self.initializing=False
+        self.stop_message=''
 
     def reset(self,now):
         self.__init__();self.started=now;self.last_activity=now;self.initializing=True
@@ -28,8 +29,10 @@ class StatusModel:
     def failure(self,message):
         self.source_error=str(message);self.explicit_stop=False
 
-    def stop(self,now=None):
+    def stop(self,now=None,message=''):
         self.explicit_stop=True;self.initializing=False
+        self.source_error=''
+        self.stop_message=message
         if now is not None:self.finished=now
 
     def view(self,now,*,state=None,session_revision=0,checking=False,exporting=False,
@@ -50,7 +53,7 @@ class StatusModel:
         if self.source_error:
             return result('error','同步失敗',self.source_error,note='請查看詳細紀錄；成功回報前不會顯示同步完成。')
         if self.explicit_stop or cancelled:
-            return result('stopped','已停止同步','背景同步已停止或正在結束；D5 場景保留。')
+            return result('stopped','已停止同步',self.stop_message or '背景同步已停止或正在結束；D5 場景保留。')
         if checking:
             self.initializing=False
             return result('active','同步中…','正在檢查 Blender 與官方 D5 Sync',True,
@@ -74,6 +77,10 @@ class StatusModel:
         if complete:
             if self.finished is None:self.finished=now
             card['elapsed']=duration(self.finished-(self.started if self.started is not None else self.finished))
+            if state.get('bridge_backup_warning'):
+                return result('waiting','同步完成，備份未完成',
+                              '本輪已收到成功回報，但新的橋接還原點尚未完成。',
+                              note='請檢查備份錯誤；後續更新會先重試備份。'+str(state['bridge_backup_warning']))
             suffix='有新的修改待更新。' if dirty else '等待下一次修改。'
             if paused:
                 return result('paused','已暫停','本輪同步已完成；後續更新已暫停。',note=suffix+' D5 畫面與材質仍需確認。')

@@ -16,6 +16,7 @@ DEFAULT_LAYER = 'Layer 0'
 MODES = {'normal', 'hold', 'exclude'}
 POLICY_KEY = 'layer_sync_modes_v1'
 META = '_bridge_layer_scope'
+MATERIAL_BINDINGS = 'material_bindings_v1'
 
 
 def clean_policy(raw):
@@ -157,10 +158,13 @@ def material_attribute_maps(scene,groups=None,include_loose=True):
         for attrs in mesh.get('faces',[]) or []:
             if isinstance(attrs,dict) and any(k in attrs for k in ('mat','color','opacity','texture')):
                 yield attrs
+                if isinstance(attrs.get('back'),dict):yield attrs['back']
         geom=mesh.get('geom')
         if isinstance(geom,dict):
             for attrs in geom.get('face_attrs',[]) or []:
-                if isinstance(attrs,dict):yield attrs
+                if isinstance(attrs,dict):
+                    yield attrs
+                    if isinstance(attrs.get('back'),dict):yield attrs['back']
     if include_loose:yield from attributes(scene)
     stack=list(groups if groups is not None else scene.get('groups',[]) or [])
     while stack:
@@ -189,7 +193,9 @@ class Composer:
         self.proto_map = {}
         self.proto_hash = {}
         self.materials = {}
-        self.isolate_current = isolate_current
+        # Existing identities outlive policy changes. Only genuinely new
+        # appearances may acquire a new isolated name after a baseline exists.
+        self.isolate_current = bool(isolate_current or previous)
         self.compact_legacy = compact_legacy
         self.registry_maps = {}
         self.definition_keys = {}
@@ -200,10 +206,54 @@ class Composer:
         self.candidates = {}
         self.aliases = {}
         self.retained_legacy = set()
-        self.previous_names = referenced_scope_materials(previous.scene) if previous and isolate_current else set()
+        self.previous_names = referenced_scope_materials(previous.scene) if previous else set()
         previous_meta = previous.data.get(META,{}) if previous else {}
         self.alias_history = previous_meta.get('material_aliases_v2',{})
-        if not isinstance(self.alias_history,dict):self.alias_history = {}
+        if not isinstance(self.alias_history,dict):raise ValueError('舊材質對應表格式無效，已停止以保護關聯')
+        self.material_scope='@loose'
+        self.bindings={}
+        self.unmapped_scopes={}
+        stored=previous_meta.get(MATERIAL_BINDINGS,{})
+        if not isinstance(stored,dict):raise ValueError('材質識別對應表格式無效，已停止以保護關聯')
+        for scope,keys in stored.items():
+            if not isinstance(scope,str) or not isinstance(keys,dict):raise ValueError('材質識別對應表格式無效')
+            self.bindings[scope]={}
+            for key,names in keys.items():
+                if not isinstance(key,str) or not isinstance(names,list) or not names or any(n is not None and not isinstance(n,str) for n in names):
+                    raise ValueError('材質識別對應表格式無效')
+                self.bindings[scope][key]=set(names)
+        reverse={}
+        for key,names in self.alias_history.items():
+            if isinstance(names,list):
+                for name in names:
+                    if isinstance(name,str) and name.startswith('_scope_'):
+                        self.previous_names.add(name);reverse.setdefault(name,set()).add(key)
+        if previous:
+            scopes=[('@loose',None)] + [(self.scope_key(g),[g]) for g in previous.scene.get('groups',[])]
+            for scope,groups in scopes:
+                for attrs in material_attribute_maps(previous.scene,groups or [],include_loose=groups is None):
+                    if not any(k in attrs for k in ('mat','color','opacity','texture')):continue
+                    name=attrs.get('mat')
+                    if isinstance(name,str) and name.startswith('_scope_'):
+                        keys=reverse.get(name,set())
+                        if not keys:self.unmapped_scopes.setdefault(scope,set()).add(name)
+                    else:keys={self.material_info(attrs,previous)[0]}
+                    for key in keys:self.bindings.setdefault(scope,{}).setdefault(key,set()).add(name)
+        for keys in self.bindings.values():
+            for names in keys.values():self.previous_names.update(n for n in names if isinstance(n,str) and n.startswith('_scope_'))
+
+    @staticmethod
+    def scope_key(group):
+        return group.get('_bridge_scope_key') or ('uid/'+str(group['uid']) if group.get('uid') else 'g/unknown')
+
+    def convert_root(self,group,bundle,current=False):
+        prior=self.material_scope;self.material_scope=self.scope_key(group)
+        try:return self.convert(group,bundle,current)
+        finally:self.material_scope=prior
+
+    def binding_ledger(self):
+        return {scope:{key:sorted(names,key=lambda n:(n is not None,n or '')) for key,names in keys.items()}
+                for scope,keys in self.bindings.items()}
 
     def asset(self, bundle, name):
         cache_key = (id(bundle), name)
@@ -237,7 +287,7 @@ class Composer:
                         ('lime_face_auto','lime_suite_parametric')}
             if key == 'proto':
                 source_index = int(item)
-                cache_key = (id(bundle), source_index, current)
+                cache_key = (id(bundle), source_index, current,self.material_scope)
                 if cache_key not in self.proto_map:
                     protos = bundle.scene.get('protos', []) or []
                     if not 0 <= source_index < len(protos):
@@ -259,7 +309,7 @@ class Composer:
                 out[key] = self.convert(item, bundle, current)
         # A source texture is normally embedded by the host exporter. Reject
         # a missing referenced member instead of silently making a white mat.
-        if current and self.isolate_current and any(k in value for k in ('mat', 'texture', 'color', 'opacity')):
+        if current and any(k in value for k in ('mat', 'texture', 'color', 'opacity')):
             # Only visual attribute mappings, never a layer's display color or
             # arbitrary plugin data. Callers convert registry separately.
             if 'vertices' not in value and 'a' in value and 'b' in value:
@@ -324,10 +374,22 @@ class Composer:
 
     def isolate(self, out, original, bundle):
         key,legacy,finish=self.material_info(original,bundle)
+        retained=self.bindings.get(self.material_scope,{}).get(key,set())
+        unmapped=self.unmapped_scopes.get(self.material_scope,set())
+        if not retained and unmapped and legacy not in unmapped:
+            raise ValueError('舊隔離材質缺少可確認的對應，已停止傳送以保護 D5 材質')
         history=self.alias_history.get(key,[])
         history=[name for name in history if isinstance(name,str) and name in self.previous_names] if isinstance(history,list) else []
         candidates=set(self.candidates.get(key,())) | set(history)
-        if not self.compact_legacy and legacy in self.previous_names:
+        if legacy in retained:
+            name=legacy
+        elif len(retained)==1:
+            name=next(iter(retained))
+        elif retained and not self.compact_legacy:
+            raise ValueError('材質識別有多個既有對應，已停止傳送以避免覆寫 D5 材質')
+        elif not self.isolate_current:
+            name=original.get('mat')
+        elif not self.compact_legacy and legacy in self.previous_names:
             # Default upgrade path: do not collapse IDs which may have
             # different overrides inside the D5 project we cannot inspect.
             name=legacy;self.retained_legacy.add(name)
@@ -341,9 +403,12 @@ class Composer:
             name=next(iter(candidates))
         else:
             name='_scope_'+key[:24]
-        out['mat']=name
-        self.aliases.setdefault(key,set()).add(name)
-        self.materials[name]={'name':name,'finish':finish}
+        if name is None:out.pop('mat',None)
+        else:out['mat']=name
+        self.bindings.setdefault(self.material_scope,{}).setdefault(key,set()).add(name)
+        if isinstance(name,str) and name.startswith('_scope_'):
+            self.aliases.setdefault(key,set()).add(name)
+            self.materials[name]={'name':name,'finish':finish}
 
     def registry(self, bundle):
         for material in bundle.scene.get('materials', []) or []:
@@ -410,17 +475,17 @@ def compose(current_path, baseline_path, policy, output_path, lights=None,
             group['children'] = [frozen_tags(child,False) for child in group.get('children',[]) or []]
             return group
         # Frozen data is copied first to reserve asset/material names.
-        old_groups = [composer.convert(frozen_tags(g), previous) for g in selected_old]
+        old_groups = [composer.convert_root(frozen_tags(g), previous) for g in selected_old]
         if frozen_loose:
             faces = composer.convert(previous.scene.get('faces', []), previous)
             edges = composer.convert(previous.scene.get('edges', []), previous)
         else:
             faces, edges = [], []
-        if selected_old or frozen_loose:
+        if previous:
             composer.registry(previous)
         composer.prepare_materials(selected_new,current,
                                    {'faces':current.scene.get('faces',[]),'edges':current.scene.get('edges',[])} if loose_mode=='normal' else None)
-        new_groups = [composer.convert(g, current, True) for g in selected_new]
+        new_groups = [composer.convert_root(g, current, True) for g in selected_new]
         if loose_mode == 'normal':
             faces = composer.convert(current.scene.get('faces', []), current, True)
             edges = composer.convert(current.scene.get('edges', []), current, True)
@@ -468,17 +533,15 @@ def compose(current_path, baseline_path, policy, output_path, lights=None,
         known = sorted(set(known_light_ids or []) | set(previous_meta.get('known_light_ids',[])) |
                        set(previous_lights) | set(current_lights))
         alias_ledger={key:sorted(names) for key,names in composer.aliases.items()}
-        held_names=referenced_scope_materials({'groups':old_groups,'protos':composer.protos,
-                                              'faces':faces if frozen_loose else []})
         old_ledger=previous_meta.get('material_aliases_v2',{})
         if isinstance(old_ledger,dict):
             for key,names in old_ledger.items():
-                if key not in alias_ledger and isinstance(names,list):
-                    kept=sorted({name for name in names if isinstance(name,str) and name in held_names})
-                    if kept:alias_ledger[key]=kept
+                if isinstance(names,list):
+                    kept={name for name in names if isinstance(name,str) and name.startswith('_scope_')}
+                    alias_ledger[key]=sorted(kept|set(alias_ledger.get(key,[])))
         meta = {'format':1,'policy':policy,'lights':effective_lights,
                 'light_layers':effective_map,'known_light_ids':known,
-                'material_aliases_v2':alias_ledger}
+                'material_aliases_v2':alias_ledger,MATERIAL_BINDINGS:composer.binding_ledger()}
         output = {k:copy.deepcopy(v) for k,v in current.data.items() if k not in ('scene',META)}
         output.update(scene=scene)
         output[META] = meta
@@ -491,6 +554,10 @@ def compose(current_path, baseline_path, policy, output_path, lights=None,
                 'layer_policy':policy,'d5_lights':effective_lights,'d5_light_ids':known,
                 'isolated_materials':len({name for names in composer.aliases.values() for name in names}),
                 'logical_materials':len(composer.aliases),'legacy_names_preserved':len(composer.retained_legacy),
+                'material_identity_version':1,
+                'material_identity_migrated':bool(previous and MATERIAL_BINDINGS not in previous_meta),
+                'material_policy_changed':bool(previous and previous_meta.get('policy',{})!=policy),
+                'material_binding_scopes':len(composer.bindings),
                 'compact_legacy_materials':bool(compact_legacy),
                 'legacy_aliases_collapsed':sum(max(0,len(names)-1) for names in composer.candidates.values()) if compact_legacy else 0}
     finally:
