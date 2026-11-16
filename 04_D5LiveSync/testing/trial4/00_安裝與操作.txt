@@ -1,0 +1,23 @@
+IngeTrazo-D5-LiveSync 0.9.10-test.4（2026-11-16，待驗收測試版）
+包含 test.3 材質識別保留及新版橋接備份／還原機制。
+
+安裝
+1. 停止同步並關閉 IngeTrazo，保留已救回的 D5 原檔，另存只供測試的副本。
+2. 完整複製 %LOCALAPPDATA%\IngeTrazoD5Bridge\projects\ 備份；將既有 ingetrazo_d5_livesync 外掛資料夾備份到 plugins 以外。保留 IGZ 副本。
+3. 把 ZIP 內 ingetrazo_d5_livesync 放到 %APPDATA%\IngeTrazo\plugins\，取代同名資料夾，不多套 ZIP 名稱。
+4. 重開 IngeTrazo，診斷 bridge=0.9.10-test.4。沿用既有專案識別與 Blender／D5 路徑，只讓 D5 測試副本接收同步。
+5. 首輪仍需檢查材質：恢復的 D5 與目前橋接檔可能不匹配，本版不能補造已丟失的 SDK UUID。若首輪已變素模，停止並保留診斷，不繼續覆蓋原 D5 檔案。
+
+自動備份
+- 每輪送出前備份上一個成功確認配對，成功確認後立即保存本輪還原點。
+- 每日本機日期首份標記每日備份；高風險操作前的點及手動點預設「保留」。同一狀態當日重試會共用已驗證的備份。
+- 最近 10 版＋最近 7 個有備份日期的每日點保留；「保留」點不自動清掉。未知、損壞、rescue 保全及舊 optimization-backups 都不自動清除。
+- 存放：projects/<專案識別>/bridge-backups/point-時間-識別/
+  內含 bridge.blend、scope-cache/對應快照、bridge-state.json、backup.json。
+- 本輪成功但新還原點備份失敗，會顯示「同步完成，備份未完成」；後續更新前仍必須先備份，請檢查空間與錯誤。
+
+介面操作
+在設定按「橋接備份與還原…」。列表只讀目前文件的還原點，可看時間、版本、圖層模式、用途、保留狀態。
+停止同步並等待背景 Blender 結束後，可按「立即備份」、「保留／取消保留」或「還原選取…」。取消保留的舊點之後可能被輪替。
+「驗證選取」核對配對與 SHA-256；列表初次讀取不代表全部大檔已重新算過雜湊，還原前一定完整驗證。
+尚無已確認基準時，不會把任意 .blend 猜成有效還原點。舊版基準由 worker 開啟驗證專案、receipt、scope 指標後才建立配對紀錄。

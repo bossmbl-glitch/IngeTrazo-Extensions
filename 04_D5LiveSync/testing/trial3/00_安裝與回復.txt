@@ -1,0 +1,17 @@
+IngeTrazo-D5-LiveSync 0.9.10-test.3（2026-11-16，待驗收測試版）
+目標 Windows／IngeTrazo 0.6.0／現有 Blender 與官方 D5 Sync。尚未完成本版 Windows／D5 驗收。
+
+先保護救回的材質
+1. 停止 LiveSync、關閉 IngeTrazo，保留已救回的 D5 檔案，另存一份只供測試的 D5 副本。
+2. 在同步停止時，完整複製備份 %LOCALAPPDATA%\IngeTrazoD5Bridge\projects\ 資料夾。不要刪除、清空或改名原本專案資料，也不要建立新的模型關聯。
+3. 將 %APPDATA%\IngeTrazo\plugins\ingetrazo_d5_livesync 整個資料夾備份到 plugins 之外，標明原版本。保留 IGZ 備份。
+4. 解壓 test.3，把 ingetrazo_d5_livesync 資料夾放入 %APPDATA%\IngeTrazo\plugins\，取代同名資料夾，不多套一層 ZIP 名稱。
+5. 重開 IngeTrazo，診斷 bridge 應為 0.9.10-test.3。沿用既有 Blender、D5、IGZ 專案識別；不重裝 SDK 或材質工作室。
+6. 只開啟 D5 測試副本接收同步，先做首次完整同步。第一輪就檢查材質：若已重置，立即停止，不再做圖層切換；保留診斷，勿覆蓋已救回的 D5 原檔。
+7. 第一輪材質正常後，再依 01_材質關聯驗收.txt 測試。首次升級舊基準或切換圖層政策前，橋接器會自動備份 bridge.blend 與確認 scope 快照，但不備份 D5。
+
+重要：救回的 D5 存檔與目前橋接檔可能已是不同版本。本版能保留仍存在的橋接識別，不能憑 D5 備份找回已被舊版橋接檔刪除的 UUID。第一次重連能否繼承必須用副本驗證。
+
+回復
+停止同步、關閉 IngeTrazo 並等待背景 Blender 結束。將 test.3 外掛移出 plugins，還原原外掛資料夾；若要回復測試前的橋接狀態，也要還原第 2 步 projects 的完整備份到原路徑，搭配測試前的 IGZ／D5 副本。不要只回復外掛，卻沿用已改變的橋接基準。
+自動備份位於 projects/<id>/optimization-backups/before-0.9.10-test.3-*，backup.json 列出檔案雜湊；它只涵蓋橋接檔與 scope，不能代替完整 D5 專案備份。

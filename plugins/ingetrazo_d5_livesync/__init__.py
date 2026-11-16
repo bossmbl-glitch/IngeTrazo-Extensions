@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """IngeTrazo -> background Blender -> official D5 LiveSync."""
-__version__ = "0.9.10-test.2"
+__version__ = "0.9.10-test.6"
 
 
 def setup(app):

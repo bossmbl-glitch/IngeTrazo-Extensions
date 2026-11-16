@@ -69,7 +69,7 @@ class SnapshotSession:
         self.motion_candidate_revision=0;self.motion_base_hash=None;self.motion_protocol=False;self.last_fallback_reason='first_full_sync'
         self.partial_enabled=False;self.partial_protocol=False;self.motion_enabled=True
         write_json(self.directory / "owner.json", {
-            "plugin": "ingetrazo_d5_livesync", "version": "0.9.10-test.2",
+            "plugin": "ingetrazo_d5_livesync", "version": "0.9.10-test.6",
             "parent_pid": os.getpid(), "created": time.time(),
         })
 

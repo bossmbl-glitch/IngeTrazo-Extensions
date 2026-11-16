@@ -288,7 +288,7 @@ def scan_duplicates(bpy,max_seconds=3.,max_objects=12000,max_groups=500,max_memb
     groups.sort(key=lambda g:(-g['repeated_triangles_estimate'],g['id']))
     assemblies,assembly_count,assembly_errors=assembly_groups(objects[:max_objects],rows,max_groups,max_members)
     total=len(groups);matched=sum(g['count'] for g in groups)
-    return {'version':'0.9.10-test.2','summary':{'scanned_mesh_objects':len(rows),'unique_mesh_data_scanned':len(descriptors),
+    return {'version':'0.9.10-test.6','summary':{'scanned_mesh_objects':len(rows),'unique_mesh_data_scanned':len(descriptors),
         'duplicate_groups':total,'objects_in_duplicate_groups':matched,
         'repeated_triangles_estimate':sum(g['repeated_triangles_estimate'] for g in groups),
         'sdk_trial_variants':sum(v['candidate_for_sdk_trial'] for g in groups for v in g['variants']),

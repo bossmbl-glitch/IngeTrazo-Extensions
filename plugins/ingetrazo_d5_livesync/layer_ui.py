@@ -44,7 +44,7 @@ class SyncStateButton(QToolButton):
         self.setStyleSheet('QToolButton { background:'+COLORS[mode]+'; border:1px solid transparent; border-radius:4px; padding:0px; }'
                           'QToolButton:hover { border:1px solid #253545; }'
                           'QToolButton:focus { border:2px solid #253545; }')
-        meanings={'normal':'點一下改為暫時不更新，保留 D5 舊內容',
+        meanings={'normal':'點一下改為暫時不更新；可在 IngeTrazo 關閉圖層，D5 保留原顯示與材質',
                   'hold':'點一下恢復正常同步','exclude':'已排除：下次更新移除 D5 舊內容；點一下恢復正常同步'}
         self.setToolTip(self.layer_name+'：'+LABELS[mode]+'\n'+meanings[mode])
         self.setAccessibleName(self.layer_name+'：'+LABELS[mode])
@@ -61,7 +61,7 @@ class LayerDialog(QDialog):
         self.setWindowTitle('D5 圖層同步');self.setModal(False);self.resize(610,450)
         layout=QVBoxLayout(self);layout.setContentsMargins(10,10,10,10);layout.setSpacing(7)
         hint=QLabel('點選勾／叉切換是否同步。以最外層群組圖層控制整組，散線、散面歸 Layer 0。\n'
-                    '首次使用圖層保留功能，請先全部正常同步成功一次。')
+                    '取消勾選並套用後，可在 IngeTrazo 關閉圖層；D5 保留上次顯示與材質。\n首次使用前，請先正常同步成功一次。')
         hint.setWordWrap(True);layout.addWidget(hint)
         self.table=QTableWidget(0,3);self.table.setHorizontalHeaderLabels(['圖層','群組數','是否同步'])
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -75,7 +75,7 @@ class LayerDialog(QDialog):
         self.table.setColumnWidth(1,70);self.table.setColumnWidth(2,90)
         layout.addWidget(self.table)
         legend=QLabel('<span style="color:#249c45">✓ 正常同步</span>　'
-                      '<span style="color:#c77518">✕ 暫時不更新，保留 D5 舊內容</span><br>'
+                      '<span style="color:#c77518">✕ 暫時不更新，來源可隱藏、D5 保留</span><br>'
                       '<span style="color:#b93f3f">⊘ 排除同步</span>：更新時移除先前傳送內容，來源模型保留。')
         legend.setWordWrap(True);layout.addWidget(legend)
         self.notice=QLabel();self.notice.setWordWrap(True);layout.addWidget(self.notice)

@@ -77,6 +77,10 @@ class StatusModel:
         if complete:
             if self.finished is None:self.finished=now
             card['elapsed']=duration(self.finished-(self.started if self.started is not None else self.finished))
+            if state.get('bridge_backup_warning'):
+                return result('waiting','同步完成，備份未完成',
+                              '本輪已收到成功回報，但新的橋接還原點尚未完成。',
+                              note='請檢查備份錯誤；後續更新會先重試備份。'+str(state['bridge_backup_warning']))
             suffix='有新的修改待更新。' if dirty else '等待下一次修改。'
             if paused:
                 return result('paused','已暫停','本輪同步已完成；後續更新已暫停。',note=suffix+' D5 畫面與材質仍需確認。')

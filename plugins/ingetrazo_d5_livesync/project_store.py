@@ -38,7 +38,7 @@ class ProjectLease:
             self.stream.close();self.stream=None
 
 
-def checkpoint(bpy, path):
+def checkpoint(bpy, path,before_install=None):
     """Atomic snapshot AFTER Sync assigns IDs; keep the D5 source path unchanged."""
     path=Path(path);pending=path.with_name('bridge.checkpoint.blend')
     pending.unlink(missing_ok=True)
@@ -46,6 +46,7 @@ def checkpoint(bpy, path):
                                         compress=False,relative_remap=False)
     if result != {'FINISHED'} or not pending.is_file():
         raise RuntimeError('同步已傳送，但橋接識別資料未能保存；原橋接檔保留')
+    if before_install is not None:before_install(pending)
     os.replace(pending,path)
     # Blender backup files, if any, belong solely to this private checkpoint.
     pending.with_suffix('.blend1').unlink(missing_ok=True)

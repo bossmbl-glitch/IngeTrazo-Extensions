@@ -89,6 +89,7 @@ def main(directory):
         nonlocal phase
         previous_phase=phase
         phase = state
+        if extra.get('bridge_backup_warning'):message+='；本輪還原點備份未完成，後續更新會先重試備份'
         data = {"phase": state, "message": message, "updated_at": time.time(),
                 "worker_pid": os.getpid(), "acknowledged_revision": ack,
                 "scope_baseline_ready": baseline is not None, **extra}
@@ -103,6 +104,10 @@ def main(directory):
         status("starting", "背景 Blender 正在載入官方 D5 LiveSync")
         from project_store import ProjectLease, checkpoint, material_ids
         lease = ProjectLease(project).acquire()
+        from bridge_backups import (bootstrap_state,create_point,prepare_checkpoint,
+                                    recover_checkpoint,recover_restore,prune_points,VERSION)
+        recover_restore(project)
+        recover_checkpoint(project)
         addon = None
         restored = bridge_file.exists()
         if restored:
@@ -135,6 +140,19 @@ def main(directory):
             import hashlib
             if hashlib.sha256(baseline.read_bytes()).hexdigest() != baseline_name[6:-4]:
                 raise RuntimeError('上次確認的圖層基準損壞，已停止同步')
+            if not bpy.context.scene.get('bridge_has_receipt'):
+                raise RuntimeError('橋接檔沒有成功確認紀錄，請先保留檔案並選擇有效還原點')
+            from layer_scope import Bundle,META
+            prior=Bundle(baseline)
+            try:prior_policy=prior.data.get(META,{}).get('policy',{})
+            finally:prior.close()
+            saved=bootstrap_state(project,baseline,{'plugin_version':'legacy','recorded_by':VERSION,
+                'blender_version':bpy.app.version_string,'sdk_version':list(adapter.version),
+                'revision':None,'layer_policy':prior_policy})
+            if Path(saved['scope_file']).name!=baseline_name:raise RuntimeError('橋接檔與確認快照指標不符，請先還原有效配對')
+            from project_transfer import rebind_model_owners
+            rebound=rebind_model_owners(bpy.data,saved,model_file)
+            if rebound:recorder.event('transfer_ownership_rebound',properties=rebound)
         importer = IncrementalImporter()
         last_heartbeat = 0
         initial = True
@@ -161,6 +179,10 @@ def main(directory):
                 time.sleep(0.2)
                 continue
             try:
+                if recover_checkpoint(project):
+                    from bridge_backups import current_state
+                    baseline=project/current_state(project)['scope_file']
+                    recorder.event('checkpoint_recovered',revision=revision)
                 if adapter.busy():
                     if busy_started is None:busy_started=time.perf_counter()
                     if time.monotonic() - last_heartbeat > 3:
@@ -198,6 +220,16 @@ def main(directory):
                                 light_layer_map=latest.get('d5_light_layers', {}),
                                 known_light_ids=latest.get('d5_light_ids', []),
                                 compact_legacy=bool(config.get('compact_legacy_materials',False)))
+                if baseline is not None and bridge_file.exists():
+                    reasons=['before_sync']
+                    if not motion and not local:
+                        if scope.get('visibility_migrated'):reasons.append('visibility_upgrade')
+                        if scope.get('material_identity_migrated'):reasons.append('identity_migration')
+                        if scope.get('material_policy_changed'):reasons.append('layer_policy_change')
+                        if scope.get('legacy_aliases_collapsed',0):reasons.append('material_compaction')
+                    point=create_point(project,reasons,pinned=len(reasons)>1)
+                    scope['bridge_restore_point']=str(point)
+                    recorder.event('bridge_restore_point',revision=revision,path=str(point),reasons=reasons)
                 if (scope.get('legacy_aliases_collapsed',0)>0 and material_optimization_backup is None
                         and baseline is not None and bridge_file.exists()):
                     from optimization_backup import backup_bridge_identity
@@ -274,9 +306,25 @@ def main(directory):
                     shutil.copyfile(model_file, confirmed_temp)
                     os.replace(confirmed_temp, confirmed_path)
                 bpy.context.scene['bridge_scope_baseline'] = confirmed_name
-                checkpoint(bpy, bridge_file)
+                bpy.context.scene['bridge_confirmed_revision']=revision
+                checkpoint_metadata={'plugin_version':VERSION,'blender_version':bpy.app.version_string,
+                    'sdk_version':list(adapter.version),'revision':revision,'session_id':directory.name,
+                    'layer_policy':scope.get('layer_policy',{})}
+                checkpoint(bpy,bridge_file,before_install=lambda pending_blend:
+                    prepare_checkpoint(project,confirmed_path,checkpoint_metadata,pending_blend))
+                recover_checkpoint(project)
                 previous_baseline = baseline
                 baseline = confirmed_path
+                backup_warning='';confirmed_restore_point=None
+                try:
+                    confirmed_restore_point=str(create_point(project,['confirmed']))
+                    recorder.event('bridge_confirmed_restore_point',revision=revision,path=confirmed_restore_point)
+                except (OSError,ValueError,KeyError,TypeError) as exc:
+                    # The SDK receipt and paired checkpoint are already valid.
+                    # Keep them truthful; before the NEXT send, create_point
+                    # must succeed, so storage failure cannot skip protection.
+                    backup_warning=str(exc)
+                    recorder.event('bridge_confirmed_backup_failed',revision=revision,error=backup_warning)
                 if not motion and not local and (config.get('fast_transforms') or config.get('partial_updates')):
                     try:patch_cache.prime(baseline,confirmed_name[6:-4])
                     except Exception as exc:
@@ -288,6 +336,11 @@ def main(directory):
                     if obsolete not in (baseline, previous_baseline):
                         try:obsolete.unlink()
                         except OSError:pass
+                try:
+                    removed=prune_points(project) if not backup_warning else []
+                    if removed:recorder.event('bridge_backup_pruned',paths=removed)
+                except (OSError,ValueError,KeyError,TypeError) as exc:
+                    recorder.event('bridge_backup_prune_deferred',error=str(exc))
                 checkpoint_seconds = time.perf_counter() - sent_at
                 initial = False
                 metrics = {"revision": revision, "import_seconds": imported_at - started,
@@ -298,6 +351,8 @@ def main(directory):
                            "initial_bridge_save_seconds":initial_bridge_save_seconds,
                            "checkpoint_seconds": checkpoint_seconds,
                            "material_optimization_backup": material_optimization_backup,
+                           "bridge_confirmed_restore_point":confirmed_restore_point,
+                           "bridge_backup_warning":backup_warning,
                            "restored_bridge": restored,
                            "bridge_file": str(bridge_file),
                            "export_seconds": latest.get("export_seconds"),
