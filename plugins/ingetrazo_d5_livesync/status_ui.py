@@ -69,7 +69,7 @@ class SyncStatusMonitor(QObject):
             for widget in (self.dialog,self.dialog.title,self.dialog.detail,self.dialog.bar):widget.repaint()
 
     def failure(self,message):self.model.failure(message);self.poll()
-    def stop(self):self.model.stop(time.monotonic());self.poll()
+    def stop(self,message=''):self.model.stop(time.monotonic(),message);self.poll()
 
     def poll(self):
         p=self.panel;session=p.session;state={};log_token=None

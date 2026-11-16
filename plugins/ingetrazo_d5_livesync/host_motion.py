@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Host-only certificate for native placement commands; unknown edits fall back."""
-import json,math,os,time
+import hashlib,json,math,os,sys,time
 from collections import Counter
 from pathlib import Path
 from PySide6.QtGui import QMatrix4x4
@@ -16,6 +16,11 @@ def json_value(value):
 
 def frozen(value):return json.dumps(json_value(value),sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False)
 def matrix(value):return tuple(float(x) for x in value.data()) if value is not None else None
+
+def uses_material(value,names):
+    if isinstance(value,dict):
+        return value.get('mat') in names or any(uses_material(v,names) for v in value.values())
+    return isinstance(value,(list,tuple)) and any(uses_material(v,names) for v in value)
 
 
 def rigid_change(before,after):
@@ -60,11 +65,24 @@ class MotionCertificate:
                         safe=False;local=False
                         record={'time':time.time(),'action':_name,'command':type(command).__name__,
                                 'content_before':before,'faces':[],'inspection_error':str(exc)[:500]}
-                    try:return _original(*args,**kwargs)
+                    try:
+                        result=_original(*args,**kwargs)
+                        # Native History.execute reports rolled-back failures
+                        # through fields rather than re-raising the exception.
+                        if _name=='execute' and (getattr(self.history,'last_error',None) or getattr(self.history,'last_rejected',None)):
+                            safe=False;local=False;record['command_failed']=True
+                        return result
+                    except BaseException:
+                        safe=False;local=False;record['command_failed']=True
+                        raise
                     finally:
                         try:
                             finished=self._record(command,_name,before)
                             for key in ('faces','face_count','target_overflow'):record[key]=finished[key]
+                            if record.get('paint_certified'):
+                                record['loose_after']=finished.get('loose_before')
+                                if not finished.get('paint_certified'):local=False
+                            record['placement_after']=finished.get('placement_before',[])
                         except Exception as exc:
                             local=False;record['inspection_error']=str(exc)[:500]
                         if not safe:self.epoch+=1
@@ -96,10 +114,23 @@ class MotionCertificate:
         return type(command) is self.compound and bool(command.commands) and all(self._safe(c) for c in command.commands)
 
     def _local(self,command):
+        if self._studio_paint(command):return True
         if type(command).__name__=='SnapshotMutation' and type(command) in self.local_types:
             return command.mutate is None
         if type(command) in self.safe+self.local_types:return True
         return type(command) is self.compound and bool(command.commands) and all(self._local(c) for c in command.commands)
+
+    def _studio_paint(self,command):
+        # Fail closed for other plugins, subclasses or changed source. Native
+        # History restores the command mesh for undo/redo after leaving edit.
+        # Reviewed engine's _put bumps scene.mesh even with no loose face edits.
+        cls=type(command);module=sys.modules.get(cls.__module__)
+        if (cls.__module__!='ingetrazo_plugin_it_material_studio.engine' or cls.__name__!='PaintCommand'
+                or getattr(module,'PaintCommand',None) is not cls):return False
+        try:
+            source=Path(module.__file__).read_text(encoding='utf-8').replace('\r\n','\n')
+            return hashlib.sha256(source.encode()).hexdigest()=='d18b80b8a43ab1a093288978b6bf4cda85f4359a495eaac697eb64323b32dd2a'
+        except (OSError,AttributeError,UnicodeError):return False
 
     def _append(self,record):
         self.sequence+=1;record['sequence']=self.sequence
@@ -124,13 +155,33 @@ class MotionCertificate:
             if type(c).__name__=='RestampMaterialCommand' and type(c) in self.local_types:
                 targeted.extend(row[0] for row in (getattr(c,'_old_faces',None) or []))
         face_count=len(targeted)
+        paint=self._studio_paint(command)
+        if paint:targeted.extend(row[0] for row in command.faces);face_count=len(targeted)
         return {'time':time.time(),'action':action,'command':type(command).__name__,
+                'placement_before':[self._placement_state(c.group) for c in children if type(c) in self.safe][:30],
+                'baked_targets':[id(c.group) for c in children if type(c) in self.safe and c.group.xform is None],
+                'paint_certified':paint,
+                'paint_roots':[id(row[0]) for row in command.groups] if paint else [],
+                'loose_before':(id(self.scene.loose_mesh),getattr(self.scene.loose_mesh,'_mut_serial',None)) if paint else None,
                 'module':type(command).__module__,
                 'face_count':face_count,'target_overflow':face_count>20000,
                 'commands':[type(c).__name__ for c in children][:100],
                 'targets':[{'name':str(getattr(c.group,'name','')),'uid':str(getattr(c.group,'uid',''))} for c in children if hasattr(c,'group')][:30],
                 'faces':[id(f) for f in targeted] if face_count<=20000 else [],
                 'content_before':before}
+
+    @staticmethod
+    def _placement_state(group):
+        samples=[]
+        for face in group.mesh.faces:
+            for vertex in face.loop:
+                p=vertex.position;samples.append([p.x(),p.y(),p.z()])
+                if len(samples)==8:break
+            if len(samples)==8:break
+        return {'uid':str(getattr(group,'uid','')),'mesh_identity':id(group.mesh),
+                'mesh_serial':getattr(group.mesh,'_mut_serial',None),
+                'axes':matrix(getattr(group,'axes',None)),'xform':matrix(getattr(group,'xform',None)),
+                'vertex_samples':samples,'samples_are_not_geometry_proof':True}
 
     def history_since(self,baseline=None):
         seq=(baseline or {}).get('trace_sequence',0)
@@ -187,7 +238,9 @@ class MotionCertificate:
         environment={'layers':getattr(self.scene,'layers',[]),
             'plugin_data':getattr(self.scene,'plugin_data',{}),'ambience':getattr(self.scene,'ambience',None),
             'kept':[(id(g),id(g.mesh)) for g in getattr(self.scene,'kept_components',[])]}
-        for key in ('camera_home','saved_views','image_planes','shadows','units','active_layer',
+        # camera_home follows navigation in the host and is not a model edit.
+        # Explicit saved views and scene settings retain their existing guards.
+        for key in ('saved_views','image_planes','shadows','units','active_layer',
                     'layer_folders','back_face_color','display_style'):
             environment[key]=getattr(self.scene,key,None)
         global_state=frozen({'materials':getattr(self.scene,'materials',{}),**environment})
@@ -219,30 +272,95 @@ class MotionCertificate:
                 'metadata':old[k]['metadata']!=new[k]['metadata']} for k in old.keys()&new.keys() if old[k]['invariant']!=new[k]['invariant'] or old[k]['xform']!=new[k]['xform']][:60]
             result['added_keys']=sorted(new.keys()-old.keys())[:60];result['removed_keys']=sorted(old.keys()-new.keys())[:60]
             result['changed_materials']=[k for k in set(now['materials'])|set(baseline['materials']) if now['materials'].get(k)!=baseline['materials'].get(k)][:60]
+            result['loose_tracking_changed']=now['loose']!=baseline['loose']
+            result['content_versions']={'before':baseline['cv'],'after':now['cv']}
+            for row in result['changed_groups']:
+                a=json.loads(old[row['key']]['metadata']);b=json.loads(new[row['key']]['metadata'])
+                row['metadata_fields']=[k for k in set(a)|set(b) if a.get(k)!=b.get(k)]
+                row['geometry_evidence']='mesh_identity_or_mutation_serial_only'
         except (ValueError,AttributeError,TypeError) as exc:result['inspection_unavailable']=str(exc)
         return result
+
+    def unchanged(self,baseline):
+        """Skip only an exact, acknowledged host state, including dependencies."""
+        return self.unchanged_report(baseline)['unchanged']
+
+    def unchanged_report(self,baseline):
+        current=self.capture(allow_edit=True)
+        keys=('cv','epoch','local_epoch','trace_sequence','global','loose','groups')
+        changed=[k for k in keys if current[k]!=baseline[k]]
+        before=json.loads(baseline['environment']);after=json.loads(current['environment'])
+        environment_fields=sorted(k for k in set(before)|set(after) if before.get(k)!=after.get(k))
+        dependencies=[{'file':Path(p).name,'reason':'unavailable' if stamp is None or self._stat(p) is None else 'changed'}
+                      for p,stamp in baseline['dependencies'].items() if stamp is None or self._stat(p)!=stamp]
+        group_checks=[]
+        for a,b in zip(baseline['groups'],current['groups']):
+            if a==b:continue
+            left=json.loads(a['metadata']);right=json.loads(b['metadata'])
+            group_checks.append({'key':a['key'],'name':b['name'],
+                                 'fields':[k for k in ('identity','parent','path','key','root_layer','invariant','xform') if a[k]!=b[k]],
+                                 'metadata_fields':sorted(k for k in set(left)|set(right) if left.get(k)!=right.get(k))})
+        return {'unchanged':not changed and not dependencies,'changed_checks':changed,
+                'environment_fields':environment_fields,'dependency_count':len(dependencies),
+                'dependencies':dependencies[:20],'group_checks':group_checks[:30],
+                'content_versions':{'before':baseline['cv'],'after':current['cv']}}
+
+    def tracking_only(self,baseline,current):
+        # Called only after partial_plan has certified the command history.
+        # Rebase host tracking alone; keep the receiver's revision/hash intact.
+        return (all(current[k]==baseline[k] for k in ('environment','groups','loose'))
+                and all(stamp is not None and self._stat(p)==stamp for p,stamp in baseline['dependencies'].items()))
 
     def partial_plan(self,baseline):
         current=self.capture(allow_edit=True)
         if current['cv']<=baseline['cv']:raise ValueError('no_content_change')
         if self.trace and baseline.get('trace_sequence',0)<self.trace[0]['sequence']-1:raise ValueError('command_history_overflow')
         if current['environment']!=baseline['environment']:raise ValueError('global_settings_changed')
-        if current['loose']!=baseline['loose']:raise ValueError('loose_geometry_changed')
+        records=[r for r in self.trace if r['sequence']>baseline.get('trace_sequence',0)]
+        paint_records=[r for r in records if r.get('paint_certified') and not r.get('command_failed')]
+        if current['loose']!=baseline['loose']:
+            # Account for every serial change using the reviewed command, never
+            # infer unchanged geometry just from an empty target list.
+            loose=baseline['loose']
+            for r in records:
+                if r not in paint_records or r.get('faces') or r.get('loose_before')!=loose:break
+                after=r.get('loose_after')
+                if after is None or after[0]!=loose[0] or not all(isinstance(v,int) for v in (loose[1],after[1])):break
+                loose=after
+            else:
+                if loose==current['loose']:loose=None
+            if loose is not None:raise ValueError('loose_geometry_changed')
         if len(current['groups'])!=len(baseline['groups']):raise ValueError('group_structure_changed')
         if current['local_epoch']!=baseline['local_epoch']:raise ValueError('unsupported_command_or_external_change')
         selected=set()
+        painted_ids={identity for r in paint_records for identity in r.get('paint_roots',[])}
+        painted_paths=[r['path'] for r in baseline['groups'] if r['identity'] in painted_ids]
+        # v0.6.0 Move/RotateGroupCommand carries axes alongside baked vertices
+        # and UV maps. Re-export this root with the native serializer; never
+        # reinterpret the mesh change as an instance placement.
+        baked_ids={identity for r in records if not r.get('command_failed') for identity in r.get('baked_targets',[])}
         metadata='metadata_without_axes' if any(r['sequence']>baseline.get('trace_sequence',0) and r.get('action')=='edit_context' for r in self.trace) else 'metadata'
         for a,b in zip(baseline['groups'],current['groups']):
-            if any(a[k]!=b[k] for k in ('identity','parent','path','key','root_layer',metadata)):raise ValueError('group_structure_or_metadata_changed')
+            painted=any(a['path'][:len(path)]==path for path in painted_paths)
+            checked_metadata='metadata_without_axes' if a['identity'] in baked_ids and a['xform'] is None and b['xform'] is None else metadata
+            fields=('path','key','root_layer',checked_metadata) if painted else ('identity','parent','path','key','root_layer',checked_metadata)
+            if painted:
+                left=json.loads(a[checked_metadata]);right=json.loads(b[checked_metadata])
+                # clone_tree deliberately makes a painted copy unique. The
+                # native component field is a bool, not a prototype identity.
+                if all(value is None or type(value) is bool for value in (left.get('component'),right.get('component'))):
+                    left.pop('component',None);right.pop('component',None)
+                    if left==right:fields=tuple(k for k in fields if k!=checked_metadata)
+            if any(a[k]!=b[k] for k in fields):raise ValueError('group_structure_or_metadata_changed')
             if a['invariant']!=b['invariant'] or a['xform']!=b['xform']:selected.add(b['root_key'])
         faces={f for r in self.trace if r['sequence']>baseline.get('trace_sequence',0) for f in r.get('faces',[])}
         changed_materials={k for k in set(current['materials'])|set(baseline['materials']) if current['materials'].get(k)!=baseline['materials'].get(k)}
         if faces or changed_materials:
             def affected(g):
                 paint=getattr(g,'material',None) or {}
-                return (paint.get('mat') in changed_materials or any(id(f) in faces or f.attrs.get('mat') in changed_materials for f in g.mesh.faces)
+                return (uses_material(paint,changed_materials) or any(id(f) in faces or uses_material(f.attrs,changed_materials) for f in g.mesh.faces)
                         or any(affected(c) for c in g.children))
-            if any(id(f) in faces or f.attrs.get('mat') in changed_materials for f in self.scene.loose_mesh.faces):raise ValueError('loose_material_changed')
+            if any(id(f) in faces or uses_material(f.attrs,changed_materials) for f in self.scene.loose_mesh.faces):raise ValueError('loose_material_changed')
             roots=[r for r in current['groups'] if r['parent'] is None]
             for row,g in zip(roots,self.scene.groups):
                 if affected(g):selected.add(row['key'])
@@ -274,7 +392,13 @@ class MotionCertificate:
     def delta(self,baseline):
         current=self.capture()
         if current['cv']<=baseline['cv']:raise ValueError('no_confirmed_placement_command')
-        if current['epoch']!=baseline['epoch']:raise ValueError('non_placement_command')
+        if current['epoch']!=baseline['epoch']:
+            records=[r for r in self.trace if r['sequence']>baseline.get('trace_sequence',0)]
+            if (records and any(r.get('baked_targets') for r in records)
+                    and all(r.get('commands') and len(r.get('placement_before',[]))==len(r['commands'])
+                            and not r.get('command_failed') for r in records)):
+                raise ValueError('baked_group_placement')
+            raise ValueError('non_placement_command')
         if current['global']!=baseline['global'] or current['loose']!=baseline['loose']:raise ValueError('scene_or_material_changed')
         if len(current['groups'])!=len(baseline['groups']):raise ValueError('group_structure_changed')
         changes=[]

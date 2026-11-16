@@ -67,6 +67,9 @@ class IncrementalImporter:
         try:
             builder = CachedBuilder(context, doc, self)
             builder.build()
+            from material_identity import retain_material_identities
+            retained=retain_material_identities(bpy.data.materials,builder.doc_path)
+            builder.stats['identity_materials_retained']=retained
             # The base builder removes obsolete owned meshes. Drop their
             # references and never retain meshes after all their users vanish.
             self.meshes = {k: v for k, v in self.meshes.items()
@@ -77,6 +80,7 @@ class IncrementalImporter:
             for material in list(bpy.data.materials):
                 if (material.name.startswith('_scope_') and material.users==0
                         and material.get('ingetrazo_doc')==builder.doc_path
+                        and not material.get('bridge_identity_retained')
                         and not getattr(material,'asset_data',None)
                         and not getattr(material,'use_fake_user',False)):
                     bpy.data.materials.remove(material);removed+=1
