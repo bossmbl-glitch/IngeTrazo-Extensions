@@ -47,6 +47,7 @@ class SyncPanel(QWidget):
         self.allowed_revision = 0
         self.layer_dialog = None
         self.duplicate_dialog=None
+        self.backup_dialog=None
         layout = QVBoxLayout(self)
         intro = QLabel("在 IngeTrazo 編輯，由背景 Blender 與官方 D5 Sync 自動更新 D5。首次連接可能需要在 D5 選擇專案。首次啟動本版後，請儲存一次 IGZ 以記住固定關聯。")
         intro.setWordWrap(True)
@@ -123,6 +124,7 @@ class SyncPanel(QWidget):
         self.detailed_log.toggled.connect(lambda value:self.settings.setValue('detailed_log',value))
         layout.addWidget(self.detailed_log)
         export_button=QPushButton('匯出效能診斷包…');export_button.clicked.connect(self.export_performance_bundle);layout.addWidget(export_button)
+        backup_button=QPushButton('橋接備份與還原…');backup_button.clicked.connect(self.open_bridge_backups);layout.addWidget(backup_button)
         self.duplicate_scan=QCheckBox('辨識重複模型（只讀報告）')
         self.duplicate_scan.setChecked(self.settings.value('duplicate_scan',True,type=bool))
         self.duplicate_scan.toggled.connect(lambda value:self.settings.setValue('duplicate_scan',value))
@@ -156,6 +158,11 @@ class SyncPanel(QWidget):
         self.duplicate_dialog.refresh()
         if self.duplicate_dialog.isMinimized():self.duplicate_dialog.showNormal()
         else:self.duplicate_dialog.show()
+
+    def open_bridge_backups(self):
+        from .backup_ui import BridgeBackupsDialog
+        if self.backup_dialog is None:self.backup_dialog=BridgeBackupsDialog(self)
+        self.backup_dialog.refresh();self.backup_dialog.show()
 
     def buttons(self):
         active = self.process is not None and self.process.poll() is None

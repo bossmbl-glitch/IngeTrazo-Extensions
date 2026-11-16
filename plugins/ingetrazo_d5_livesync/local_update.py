@@ -4,10 +4,10 @@ import copy,hashlib,json,zipfile,shutil
 from pathlib import Path
 try:
     from .motion_delta import DeltaRejected
-    from .layer_scope import Bundle,Composer,META
+    from .layer_scope import Bundle,Composer,META,MATERIAL_BINDINGS
 except ImportError:
     from motion_delta import DeltaRejected
-    from layer_scope import Bundle,Composer,META
+    from layer_scope import Bundle,Composer,META,MATERIAL_BINDINGS
 
 TAG='_bridge_partial'
 
@@ -95,7 +95,11 @@ def prepare_local(baseline,source,ack,output,cache):
         isolate=any(meta.get('policy',{}).get(g.get('layer') or 'Layer 0')=='hold' for g in old.values()) or meta.get('policy',{}).get('Layer 0')=='hold'
         composer=Composer(isolate,previous)
         composer.members=dict(members);composer.protos=list(previous.scene.get('protos',[]))
-        replacements={key:composer.convert(g,incoming,True) for key,g in selected}
+        if previous.scene.get('_bridge_visibility_version')==1:
+            try:from .visibility import stamp_groups
+            except ImportError:from visibility import stamp_groups
+            selected=[(key,stamp_groups([g],incoming.scene)[0]) for key,g in selected]
+        replacements={key:composer.convert_root(g,incoming,True) for key,g in selected}
         composer.registry(incoming)
         # Retain every unaffected document node and asset exactly; only newly
         # selected groups go through material/resource conversion.
@@ -105,6 +109,7 @@ def prepare_local(baseline,source,ack,output,cache):
         registry={m['name']:m for m in previous.scene.get('materials',[]) if isinstance(m,dict)}
         registry.update(composer.materials);scene['materials']=list(registry.values())
         updated_meta=copy.deepcopy(meta);out[META]=updated_meta;updated_meta['partial_depth']=meta.get('partial_depth',0)+1
+        updated_meta[MATERIAL_BINDINGS]=composer.binding_ledger()
         with zipfile.ZipFile(baseline) as z:origin_bytes=meta.get('partial_origin_bytes',sum(i.file_size for i in z.infolist()))
         updated_meta['partial_origin_bytes']=origin_bytes
         ledger=updated_meta.setdefault('material_aliases_v2',{})

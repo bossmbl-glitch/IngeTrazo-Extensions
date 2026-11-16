@@ -37,7 +37,11 @@ with tempfile.TemporaryDirectory() as d:
 
 code=(Path(__file__).parent/'__init__.py').read_text(encoding='utf-8')
 browser=(Path(__file__).parent/'profile_browser.py').read_text(encoding='utf-8')
-assert 'self._save_named_to_library(name,polygon)' in code
+# v2.2.4 separates capture from the explicit named-save operation.
+tree=ast.parse(code)
+panel=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='ProfilePanel')
+capture=ast.get_source_segment(code,next(n for n in panel.body if isinstance(n,ast.FunctionDef) and n.name=='save_face'))
+assert 'QInputDialog' not in capture and '_save_named_to_library' not in capture
 assert 'self._save_named_to_library(name,self.profiles[current])' in code
 assert 'self.owner.delete_browser_profile(item)' in browser
 assert 'self.owner.rename_browser_profile(item,name.strip())' in browser

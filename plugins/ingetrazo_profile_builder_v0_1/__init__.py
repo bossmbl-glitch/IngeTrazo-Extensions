@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Quick Profile 2.2.3 — standalone IngeTrazo 0.6.0 extension.
+"""Quick Profile 2.2.4 — standalone IngeTrazo 0.6.0 extension.
 
 Geometry uses metres internally. Install this package directory in the per-user plugins folder.
 Scene geometry is committed only on generation or finishing a drawn path.
@@ -898,12 +898,13 @@ class ProfilePanel(QWidget):
         self.setAttribute(Qt.WA_QuitOnClose, False)
         self.app = app
         self.profiles, self.file = read_profiles()
+        self._temporary_profiles = set()
         self._profile_browser = None
         self._profile_key_override = None
         self._active_profile_key = None
         self._restoring_profile_preferences = False
         self._profile_preferences = self._load_profile_preferences()
-        self.setWindowTitle("輪廓外形面板 v2.2.3｜IngeTrazo")
+        self.setWindowTitle("輪廓外形面板 v2.2.4｜IngeTrazo")
         self.setMinimumSize(430, 600)
         self.resize(445, 710)
         self.setStyleSheet("""
@@ -935,7 +936,7 @@ class ProfilePanel(QWidget):
         top.addStretch(1)
         self.search_button = self.header_button('search', '搜尋並選擇剖面', self.search_profile)
         self.save_button = self.header_button('save', '只儲存目前剖面的個別參數（不修改資料庫）', self.save_last_used_state)
-        self.new_button = self.header_button('plus', '從選取面新增剖面', self.save_face)
+        self.new_button = self.header_button('plus', '從選取面擷取暫存剖面，立即使用；另存圖庫時才命名', self.save_face)
         for btn in (self.search_button,self.save_button,self.new_button):
             top.addWidget(btn)
         lay.addLayout(top)
@@ -1229,6 +1230,8 @@ class ProfilePanel(QWidget):
             if key in self.profiles and self.profiles[key] != section:
                 key = name + '｜吸取'
             self.profiles[key] = [list(pt) for pt in section]
+            if data.get('temporary_profile'):
+                self._temporary_profiles.add(key)
         else:
             key = name
         self._refresh_profiles(key)
@@ -1433,6 +1436,7 @@ class ProfilePanel(QWidget):
                 if answer != QMessageBox.Yes:
                     return False
             self.profiles[name] = clean
+            self._temporary_profiles.discard(name)
             self._persist_profiles()
             self._profile_key_override = source_key
             self._refresh_profiles(name)
@@ -1476,6 +1480,7 @@ class ProfilePanel(QWidget):
         # Keep the original legacy store as a backup for existing projects.
         # Do not discard this directory's individual file on legacy-store error.
         self.profiles[name]=[list(v) for v in points]
+        self._temporary_profiles.discard(name)
         self._persist_profiles()
         self._refresh_profiles(name)
         self._refresh_browser()
@@ -1485,7 +1490,7 @@ class ProfilePanel(QWidget):
     def sync_legacy_profiles(self):
         """Explicitly copy older custom profiles (e.g. 059) into selected folder."""
         target=self._library_directory()
-        customs={name:pts for name,pts in self.profiles.items() if name not in PRESETS}
+        customs={name:pts for name,pts in self.library_profiles().items() if name not in PRESETS}
         if not customs:
             QMessageBox.information(self,'同步完成','沒有需要同步的舊版自訂線板。')
             return
@@ -1663,6 +1668,9 @@ class ProfilePanel(QWidget):
     def save_last_used_state(self):
         """Save only the current profile's settings, never the source profile."""
         name = self.profile.currentText()
+        if name in self._temporary_profiles:
+            self.report('目前是暫存剖面；如需保留，請使用「進階設定 → 另存剖面到資料庫」，命名後再儲存個別參數。')
+            return
         section = self.profiles.get(name)
         if section is None:
             self.report('請先選取有效的剖面。')
@@ -1719,14 +1727,14 @@ class ProfilePanel(QWidget):
         if current not in self.profiles:
             self.report('請先選取有效的剖面。')
             return
-        name, ok = QInputDialog.getText(self, '儲存剖面', '輸入要儲存的剖面名稱：', text=current)
+        name, ok = QInputDialog.getText(self, '儲存剖面', '輸入要儲存的剖面名稱：', text='' if current in self._temporary_profiles else current)
         if not ok or not name.strip():
             return
         name = name.strip()
         if name in PRESETS:
             self.report('內建剖面不可覆寫，請輸入新的自訂名稱。')
             return
-        if name in self.profiles and QMessageBox.question(self,'覆寫確認',f'確定覆寫「{name}」嗎？') != QMessageBox.Yes:
+        if name in self.profiles and name not in self._temporary_profiles and QMessageBox.question(self,'覆寫確認',f'確定覆寫「{name}」嗎？') != QMessageBox.Yes:
             return
         try:
             self._save_named_to_library(name,self.profiles[current])
@@ -1861,6 +1869,7 @@ class ProfilePanel(QWidget):
                                      'section': [list(point) for point in section],
                                      'material': selected_mat, 'tag': selected_tag,
                                      'mouse_orientation': dict(mouse_orientation or {}),
+                                     'temporary_profile': profile_name in self._temporary_profiles,
                                      'mouse_draw': bool(mouse_draw),
                                      'experimental': bool(experimental)}}
                     scene.groups.append(group)
@@ -1917,8 +1926,13 @@ class ProfilePanel(QWidget):
             self.profile.setCurrentText(name)
         self.profile.blockSignals(False)
         self.on_profile_changed(self.profile.currentText())
+    def library_profiles(self):
+        """Return named library entries, excluding unsaved session captures."""
+        temporary = getattr(self, '_temporary_profiles', set())
+        return {k:v for k,v in self.profiles.items() if k not in temporary}
+
     def _persist_profiles(self):
-        custom={k:v for k,v in self.profiles.items() if k not in PRESETS or v!=PRESETS[k]}
+        custom={k:v for k,v in self.library_profiles().items() if k not in PRESETS or v!=PRESETS[k]}
         self.file.parent.mkdir(parents=True,exist_ok=True)
         self.file.write_text(json.dumps(custom,ensure_ascii=False,indent=2),encoding="utf-8")
     def import_library(self):
@@ -1939,6 +1953,7 @@ class ProfilePanel(QWidget):
             if conflicts and QMessageBox.question(self,"覆寫確認",f"有 {len(conflicts)} 個同名剖面。是否覆寫？") != QMessageBox.Yes:
                 return
             self.profiles.update(validated)
+            self._temporary_profiles.difference_update(validated)
             self._persist_profiles()
             self._refresh_profiles(next(iter(validated),None))
             QMessageBox.information(self,"匯入完成",f"已匯入 {len(validated)} 個剖面。")
@@ -1947,7 +1962,7 @@ class ProfilePanel(QWidget):
         filename,_=QFileDialog.getSaveFileName(self,"匯出剖面資料庫","quick_profile_library.json","剖面資料庫 (*.json)")
         if not filename:return
         try:
-            Path(filename).write_text(json.dumps(self.profiles,ensure_ascii=False,indent=2),encoding="utf-8")
+            Path(filename).write_text(json.dumps(self.library_profiles(),ensure_ascii=False,indent=2),encoding="utf-8")
             QMessageBox.information(self,"匯出完成","剖面資料庫已匯出。")
         except Exception as exc:self.report(exc)
     def delete_profile(self):
@@ -1974,12 +1989,17 @@ class ProfilePanel(QWidget):
             if face.hole_loops: raise ValueError("目前尚不支援含孔洞的面。")
             verts=[as_tuple(v.position) for v in face.loop]
             polygon=face_section_points_mm(verts)
-            name,ok=QInputDialog.getText(self,"儲存剖面","請輸入名稱或編號：")
-            name=name.strip()
-            if not ok or not name:return
-            if name in self.profiles and QMessageBox.question(self,"覆寫剖面",f"剖面「{name}」已存在，確定要取代嗎？") != QMessageBox.Yes: return
-            if name in PRESETS: raise ValueError('不可覆寫內建剖面，請使用新名稱。')
-            self._save_named_to_library(name,polygon)
+            # Capture only into session memory. Generated groups embed their
+            # own section so they remain editable after restarting IngeTrazo.
+            name='暫存剖面'
+            number=1
+            while name in self.profiles:
+                number+=1
+                name=f'暫存剖面 {number}'
+            self.profiles[name]=polygon
+            self._temporary_profiles.add(name)
+            self._refresh_profiles(name)
+            self.app.viewport.flash_status('已擷取暫存剖面，可直接繪製或放置；需要保留時，使用進階設定的「另存剖面到資料庫」。',6000)
         except Exception as exc:self.report(exc)
 
 
@@ -2176,7 +2196,7 @@ class ProfileDrawTool(Tool):
         self._manual_side = 1.0
         self._start_face_normal = None
         self._side_locked = False
-        viewport.flash_status('輪廓 v2.2.3：左鍵選點、Space／Enter 完成；F 換側；牆面模式 R 換凸出面、Esc 取消', 6000)
+        viewport.flash_status('輪廓 v2.2.4：左鍵選點、Space／Enter 完成；F 換側；牆面模式 R 換凸出面、Esc 取消', 6000)
 
     def on_deactivate(self, viewport):
         self._clear()

@@ -108,7 +108,7 @@ def performance_text(performance):
     def seconds(name):
         value=timing.get(name)
         return f'{value:.3f} 秒' if isinstance(value,(int,float)) else '未量測'
-    rows=['同步效能摘要','版本：0.9.10-test.2',
+    rows=['同步效能摘要','版本：0.9.10-test.6',
           '提交版本：'+str(performance.get('revision','—')),
           '本次嘗試：'+str(performance.get('attempt','—')),
           '類型：'+('本次背景程序首次傳送' if performance.get('initial_connection') else '後續更新'),
