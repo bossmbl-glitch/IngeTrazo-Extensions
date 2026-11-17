@@ -1,0 +1,42 @@
+name: Publish LiveSync 0.9.11
+on:
+  push:
+    branches: [main]
+    paths: ['04_D5LiveSync/releases/0.9.11/release.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: livesync-release-0.9.11
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify immutable sources and build package
+        run: python3 04_D5LiveSync/releases/0.9.11/build_release.py --output dist
+      - name: Publish the user-authorized release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view livesync-v0.9.11 >/dev/null 2>&1; then
+            echo 'Release already exists; preserving its tag and assets.'
+            exit 0
+          fi
+          gh release create livesync-v0.9.11 \
+            dist/IngeTrazo-D5-LiveSync-0.9.11.zip \
+            dist/IngeTrazo-D5-LiveSync-0.9.11.zip.sha256 \
+            --target "$GITHUB_SHA" \
+            --title 'IngeTrazo D5 LiveSync 0.9.11' \
+            --notes-file 04_D5LiveSync/releases/0.9.11/RELEASE_NOTES.md
+      - name: Clean the four integrated temporary branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 04_D5LiveSync/releases/0.9.11/cleanup_branches.py

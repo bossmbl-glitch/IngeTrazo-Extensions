@@ -13,7 +13,7 @@
 | `01_ProfileBuilder` | PB-01 | 快速輪廓生成器 | 2.2.4（正式版） | 83 | `ingetrazo_profile_builder_v0_1/` |
 | `02_IntegratedTools` | INT-01 | 萊姆整合工具箱 | 0.19.0 | 36 | `lime_integrated_tools_ingetrazo.py`<br>`lime_integrated_assets/` |
 | `03_CabinetDoor` | DOOR-01 | 櫃門片樣式工具 | 1.25.1 | 86 | `one_degree_cabinet_door.py`<br>`櫃門片樣式工具_IngeTrazo套件/` |
-| `04_D5LiveSync` | D5-01 | D5 LiveSync | 0.9.9 | 70 | `ingetrazo_d5_livesync/`<br>`livesync-validation.json`<br>`LiveSync驗證與效能.txt`<br>`移機安裝說明.txt` |
+| `04_D5LiveSync` | D5-01 | D5 LiveSync | 0.9.11 | 70 | `ingetrazo_d5_livesync/`<br>`livesync-validation.json`<br>`LiveSync驗證與效能.txt`<br>`移機安裝說明.txt` |
 | `05_VentAndLight` | VENT-01 | 兩點出風口與燈條 | 0.2.0 | 7 | `lime_two_point_vent.py`<br>`lime_two_point_vent_assets/`<br>`燈條_原始材質設定.json` |
 | `06_Rotation` | ROT-01 | 方向鍵旋轉工具 | 未標示 | 1 | `lime_directional_mirror.py` |
 | `07_FrameScale` | FRAME-01 | 固定邊框縮放 | 0.6.1 | 14 | `it_frame_scale/` |

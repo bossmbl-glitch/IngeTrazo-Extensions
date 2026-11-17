@@ -27,6 +27,7 @@ class D5Adapter:
         self.sent_state = None
         self.incremental_enabled = False
         self.connected = False
+        self.force_initial=False
         self.last_error = ""
         self.last_return_code = None
         self.send_calls = 0
@@ -48,21 +49,30 @@ class D5Adapter:
         print("[IngeTrazo-D5]", self.last_error, flush=True)
 
     def _send_with_receipt(self):
-        started=time.perf_counter();self._event('send_raw_begin')
+        started=time.perf_counter();self._event('send_raw_begin',sdk_state_before=self.state_text())
         try:
             result = self._original_send()
             self.last_return_code = int(result)
             self.send_calls += 1
             return result
         finally:
+            if self.last_return_code not in (None,0):
+                session=getattr(self.converter,'session',None)
+                if session is not None:
+                    try:self.sdk.DisConnect(session)
+                    except Exception as exc:self._event('failed_send_disconnect_error',error=str(exc))
             elapsed=time.perf_counter()-started
             self._raw_seconds=getattr(self,'_raw_seconds',0)+elapsed
             self._raw_measured_calls=getattr(self,'_raw_measured_calls',0)+1
-            self._event('send_raw_end',seconds=elapsed,return_code=self.last_return_code)
+            self._event('send_raw_end',seconds=elapsed,return_code=self.last_return_code,sdk_state_after=self.state_text())
 
     def _event(self,event,**data):
         recorder=getattr(self,'recorder',None)
         if recorder is not None:recorder.event(event,**{**getattr(self,'perf_context',{}),**data})
+
+    def state_text(self):
+        try:return str(self.state())
+        except Exception as exc:return 'unknown: '+str(exc)
 
     def state(self):
         return self.sdk.GetD5RenderStatus(False)
@@ -72,7 +82,7 @@ class D5Adapter:
                                 self.sdk.D5RenderNotReadyUpdating,
                                 self.sdk.D5RenderHardwareChecking)
 
-    def send(self, initial=False, lights=None, light_ids=None):
+    def send(self, initial=False, lights=None, light_ids=None,force_full=False):
         from material_audit import audit_materials,compare_audits
         started=time.perf_counter();recorder=getattr(self,'recorder',None)
         self._raw_seconds=0.;self._raw_measured_calls=0;self._operator_seconds=0.;self._prepare_seconds=0.;self._lights_seconds=0.
@@ -86,7 +96,7 @@ class D5Adapter:
             except Exception as exc:return {'error':str(exc),'summary':{},'materials':[]}
         audit_started=time.perf_counter();before=audit();before_seconds=time.perf_counter()-audit_started
         try:
-            receipt=self._send_impl(initial=initial,lights=lights,light_ids=light_ids)
+            receipt=self._send_impl(initial=initial,lights=lights,light_ids=light_ids,force_full=force_full)
             return receipt
         except Exception as exc:
             error=str(exc);raise
@@ -117,8 +127,9 @@ class D5Adapter:
                 self._event('adapter_end',**report)
             self.last_performance=report;receipt['performance']=report
 
-    def _send_impl(self, initial=False, lights=None, light_ids=None):
+    def _send_impl(self, initial=False, lights=None, light_ids=None,force_full=False):
         impl_started=time.perf_counter()
+        initial=initial or self.force_initial
         from project_store import material_ids
         current_material_ids = material_ids(bpy)
         # A saved .blend receipt does not mean a NEW official converter has
@@ -130,14 +141,15 @@ class D5Adapter:
         objects = list(bpy.context.view_layer.objects)
         current = capture(objects)
         mode, changed = plan(self.sent_state, current)
-        if initial or not self.incremental_enabled or not self.connected or self.state() != self.sdk.D5RenderInProject:
+        if force_full or initial or (not self.incremental_enabled and mode not in ('visibility','unchanged')) or not self.connected or self.state() != self.sdk.D5RenderInProject:
             mode = 'full'
+        if mode=='visibility':export_materials=False
         if mode == 'unchanged':
             self._prepare_seconds=time.perf_counter()-impl_started;lights_started=time.perf_counter()
             light_receipt = self.light_sender.send(lights or [], bpy.data.filepath, light_ids)
             self._lights_seconds=time.perf_counter()-lights_started
             self.sent_state = current
-            return {'official_return_code': 0, 'render_state': str(self.state()),
+            return {'official_return_code': 0, 'render_state': self.state_text(),
                     'send_calls': self.send_calls, 'sync_mode': 'lights_or_unchanged',
                     **light_receipt}
         from d5_export.handlers import D5Handler
@@ -155,7 +167,7 @@ class D5Adapter:
         sync.in_process = False
         updates = bpy.context.scene.d5.sync.updates
         updates.clear()
-        if not initial and mode == 'transforms':
+        if not initial and mode in ('transforms','visibility'):
             # Retain official mesh cache and send only placements. Geometry,
             # material, deletion and tag changes all use the full fallback.
             for obj in objects:
@@ -206,7 +218,7 @@ class D5Adapter:
                 or self.last_return_code != 0):
             self.connected = False
             raise RuntimeError(self.last_error or f"D5 同步未成功：{result}，回報碼 {self.last_return_code}")
-        self.connected = True
+        self.connected = True;self.force_initial=False
         lights_started=time.perf_counter()
         light_receipt = self.light_sender.send(lights or [], bpy.data.filepath, light_ids)
         self._lights_seconds=time.perf_counter()-lights_started
@@ -214,7 +226,12 @@ class D5Adapter:
         self.sent_state = current
         return {"source_materials_sent": export_materials, "sync_mode": mode, "transform_objects": len(changed) if mode == "transforms" else 0,
                 "official_return_code": self.last_return_code,
-                "render_state": str(self.state()), "send_calls": self.send_calls, **light_receipt}
+                "render_state": self.state_text(), "send_calls": self.send_calls, **light_receipt}
+
+    def recover_connection(self):
+        self.converter.destroy_session()
+        self.connected=False;self.sent_state=None;self.force_initial=True
+        self._event('converter_session_reset',reason='failed_send_after_stable_ready')
 
     def close(self):
         self.converter.destroy_session()

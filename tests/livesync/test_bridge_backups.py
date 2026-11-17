@@ -275,6 +275,12 @@ class BackupUiTests(unittest.TestCase):
         index=next(i for i,r in enumerate(dialog.rows) if r['path']==str(point));dialog.table.selectRow(index)
         with patch('ingetrazo_d5_livesync.backup_ui.QMessageBox.question',return_value=QMessageBox.StandardButton.Yes):
             dialog.restore_selected()
+        from PySide6.QtWidgets import QApplication
+        import time
+        deadline=time.monotonic()+10
+        while dialog.task is not None and time.monotonic()<deadline:
+            QApplication.processEvents();time.sleep(.005)
+        self.assertIsNone(dialog.task)
         self.assertEqual(b.current_state(self.project)['revision'],1)
         self.assertIn('橋接資料已還原',panel.status.text());panel.progress.stop.assert_called_once()
         self.assertFalse(panel.running)

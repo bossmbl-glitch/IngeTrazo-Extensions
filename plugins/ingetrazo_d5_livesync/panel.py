@@ -5,10 +5,10 @@ import os
 import time
 import json
 from pathlib import Path
-from PySide6.QtCore import QTimer, QSettings, QUrl, Signal
+from PySide6.QtCore import QTimer, QSettings, QUrl, Signal, Qt, QStandardPaths
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout, QLabel,
-    QPushButton, QLineEdit, QFileDialog, QDoubleSpinBox, QApplication, QCheckBox)
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QGroupBox,
+    QPushButton, QLineEdit, QFileDialog, QDoubleSpinBox, QApplication, QCheckBox, QMessageBox)
 from .transport import SnapshotSession, read_json, write_json
 from .launcher import launch
 from .schedule import SyncSchedule
@@ -85,52 +85,61 @@ class SyncPanel(QWidget):
         self.compact_scene = self.app.scene
         self.compact_materials = QCheckBox("整理舊版重複材質（先另存 D5 專案）")
         self.compact_materials.setToolTip("預設保留既有材質識別。勾選後合併因UV定位產生的重複材質；D5中各自調整的設定無法全部保留。停止後勾選，再重新啟動。")
-        form.addRow("效能", self.compact_materials)
         material_notice = QLabel("材質隨模型完整傳送；D5 修改的繼承由固定關聯處理。")
         material_notice.setWordWrap(True)
         form.addRow("材質", material_notice)
         layout.addLayout(form)
+        material_review=QPushButton('材質關聯與衝突…');material_review.clicked.connect(self.open_material_review);layout.addWidget(material_review)
         layer_button = QPushButton("圖層同步範圍…")
         layer_button.clicked.connect(self.open_layers)
         layout.addWidget(layer_button)
-        self.start_button = QPushButton("開始自動同步目前模型")
+        daily=QGroupBox('日常操作');daily_layout=QVBoxLayout(daily);actions=QHBoxLayout();daily_layout.addLayout(actions);layout.addWidget(daily)
+        self.start_button = QPushButton("啟動連線")
         self.start_button.clicked.connect(self.start)
-        layout.addWidget(self.start_button)
         self.pause_button = QPushButton("暫停")
         self.pause_button.setCheckable(True)
         self.pause_button.setStyleSheet("QPushButton:checked { background-color: #eda13b; color: #201500; font-weight: bold; }")
         self.pause_button.clicked.connect(lambda: self.set_paused(True))
-        layout.addWidget(self.pause_button)
+        actions.addWidget(self.pause_button)
         self.resume_button = QPushButton("繼續")
         self.resume_button.clicked.connect(lambda: self.set_paused(False))
-        layout.addWidget(self.resume_button)
-        self.now_button = QPushButton("更新一次（暫停時仍可用）")
+        actions.addWidget(self.resume_button)
+        self.now_button = QPushButton("重新整理")
+        self.now_button.setToolTip('立即更新一次；暫停時使用，完成後仍維持暫停。')
         self.now_button.clicked.connect(self.sync_now)
-        layout.addWidget(self.now_button)
-        self.full_button=QPushButton('完整更新一次');self.full_button.clicked.connect(self.sync_full_now);layout.addWidget(self.full_button)
-        self.stop_button = QPushButton("停止背景同步")
+        actions.addWidget(self.now_button)
+        daily_note=QLabel('暫停保留連線；重新整理會立即更新一次，完成後仍維持原暫停狀態。');daily_note.setWordWrap(True);daily_layout.addWidget(daily_note)
+        self.advanced_toggle=QPushButton('▶ 進階操作');self.advanced_toggle.setCheckable(True);layout.addWidget(self.advanced_toggle)
+        self.advanced_section=QGroupBox('進階操作');advanced=QVBoxLayout(self.advanced_section)
+        connection=QHBoxLayout();connection.addWidget(self.start_button);advanced.addLayout(connection)
+        self.full_button=QPushButton('強制完整更新…');self.full_button.clicked.connect(self.sync_full_now)
+        self.stop_button = QPushButton("停止同步")
         self.stop_button.clicked.connect(lambda: self.stop())
-        layout.addWidget(self.stop_button)
+        connection.addWidget(self.stop_button);advanced.addWidget(self.full_button);advanced.addWidget(self.compact_materials)
+        layout.addWidget(self.advanced_section);self.advanced_section.hide()
+        self.advanced_toggle.toggled.connect(self.advanced_section.setVisible)
+        self.advanced_toggle.toggled.connect(lambda opened:self.advanced_toggle.setText('▼ 進階操作' if opened else '▶ 進階操作'))
+        records=QGroupBox('紀錄與備份');record_layout=QVBoxLayout(records);layout.addWidget(records)
         folder = QPushButton("開啟同步紀錄")
         folder.clicked.connect(self.open_folder)
-        layout.addWidget(folder)
-        diagnostic=QPushButton('複製診斷');diagnostic.clicked.connect(self.copy_diagnostics);layout.addWidget(diagnostic)
+        record_layout.addWidget(folder)
+        diagnostic=QPushButton('複製診斷');diagnostic.clicked.connect(self.copy_diagnostics);record_layout.addWidget(diagnostic)
         self.auto_status = QCheckBox('同步時自動顯示狀態視窗')
         self.auto_status.setChecked(self.settings.value('status_auto_show',True,type=bool))
         self.auto_status.toggled.connect(lambda value:self.settings.setValue('status_auto_show',value))
-        layout.addWidget(self.auto_status)
+        record_layout.addWidget(self.auto_status)
         self.detailed_log=QCheckBox('詳細逐物件日誌（檔案較大，重啟同步後生效）')
         self.detailed_log.setChecked(self.settings.value('detailed_log',False,type=bool))
         self.detailed_log.toggled.connect(lambda value:self.settings.setValue('detailed_log',value))
-        layout.addWidget(self.detailed_log)
-        export_button=QPushButton('匯出效能診斷包…');export_button.clicked.connect(self.export_performance_bundle);layout.addWidget(export_button)
-        backup_button=QPushButton('橋接備份與還原…');backup_button.clicked.connect(self.open_bridge_backups);layout.addWidget(backup_button)
+        advanced.addWidget(self.detailed_log)
+        export_button=QPushButton('匯出診斷包…');export_button.clicked.connect(self.export_performance_bundle);record_layout.addWidget(export_button)
+        backup_button=QPushButton('橋接備份與還原…');backup_button.clicked.connect(self.open_bridge_backups);record_layout.addWidget(backup_button)
         self.duplicate_scan=QCheckBox('辨識重複模型（只讀報告）')
         self.duplicate_scan.setChecked(self.settings.value('duplicate_scan',True,type=bool))
         self.duplicate_scan.toggled.connect(lambda value:self.settings.setValue('duplicate_scan',value))
-        layout.addWidget(self.duplicate_scan)
-        duplicates=QPushButton('重複模型辨識報告…');duplicates.clicked.connect(self.open_duplicate_report);layout.addWidget(duplicates)
-        monitor_button=QPushButton('同步狀態…');monitor_button.clicked.connect(self.open_sync_status);layout.addWidget(monitor_button)
+        advanced.addWidget(self.duplicate_scan)
+        duplicates=QPushButton('重複模型辨識報告…');duplicates.clicked.connect(self.open_duplicate_report);advanced.addWidget(duplicates)
+        monitor_button=QPushButton('同步狀態…');monitor_button.clicked.connect(self.open_sync_status);record_layout.addWidget(monitor_button)
         self.status = QLabel("尚未啟動。需要已安裝官方 D5 LiveSync for Blender 1.0.0.0028。")
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
@@ -166,15 +175,16 @@ class SyncPanel(QWidget):
 
     def buttons(self):
         active = self.process is not None and self.process.poll() is None
-        self.start_button.setEnabled(not active)
-        self.now_button.setEnabled(self.running)
+        file_busy=getattr(self,'bridge_file_task',False)
+        self.start_button.setEnabled(not active and not file_busy)
+        self.now_button.setEnabled(self.running and not file_busy)
         self.pause_button.setEnabled(True)
         self.pause_button.setChecked(self.schedule.paused)
         self.resume_button.setEnabled(self.schedule.paused)
         self.stop_button.setEnabled(active)
         self.compact_materials.setEnabled(not active)
         self.detailed_log.setEnabled(not active)
-        self.fast_motion.setEnabled(not active);self.full_button.setEnabled(self.running)
+        self.fast_motion.setEnabled(not active);self.full_button.setEnabled(self.running and not file_busy)
         self.partial_updates.setEnabled(not active)
         self.duplicate_scan.setEnabled(not active)
         self.blender.setEnabled(not active)
@@ -221,19 +231,30 @@ class SyncPanel(QWidget):
         if self.session:
             data.update(preflight=read_json(self.session.directory/'preflight.json',{}),worker=read_json(self.session.directory/'status.json',{}),
                         performance=read_json(self.session.directory/'performance-latest.json',{}),log_tail=self.log_tail())
+            data['sdk_probe']=read_json(self.session.directory/'sdk-status.json',{})
+            config=read_json(self.session.directory/'config.json',{})
+            if config.get('project_directory'):
+                data['backup']=read_json(Path(config['project_directory'])/'backup-status.json',{})
             duplicates=read_json(self.session.directory/'duplicate-models-latest.json',{})
             data['duplicate_models']={k:duplicates.get(k) for k in ('revision','summary','applied','sdk_instancing_verified','errors')}
         return json.dumps(data,ensure_ascii=False,indent=2)
 
     def export_performance_bundle(self):
         from .perf_diagnostics import export_bundle
-        path,_=QFileDialog.getSaveFileName(self,'匯出效能診斷包','IngeTrazo-D5-效能診斷.zip','ZIP (*.zip)')
+        directory=Path(self.settings.value('diagnostic_export_directory','') or QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation) or str(Path.home()))
+        if not directory.is_dir():directory=Path.home()
+        name='IngeTrazo-D5-效能診斷-'+time.strftime('%Y%m%d-%H%M%S')+'.zip'
+        path,_=QFileDialog.getSaveFileName(self,'匯出診斷包',str(directory/name),'ZIP (*.zip)')
         if not path:return
         if not path.lower().endswith('.zip'):path+='.zip'
         try:
             export_bundle(self.session.directory if self.session else None,path,self.diagnostics())
-            self.status.setText('效能診斷包已匯出：'+path)
-        except Exception as exc:self.status.setText('診斷包匯出失敗：'+str(exc))
+            self.settings.setValue('diagnostic_export_directory',str(Path(path).resolve().parent));self.settings.sync()
+            self.status.setText('診斷包已匯出：'+path)
+            QMessageBox.information(self,'匯出診斷包','已匯出：\n'+path)
+        except Exception as exc:
+            self.status.setText('診斷包匯出失敗：'+str(exc))
+            QMessageBox.warning(self,'匯出診斷包','匯出失敗：'+str(exc))
 
     def copy_diagnostics(self):
         QApplication.clipboard().setText(self.diagnostics())
@@ -251,6 +272,8 @@ class SyncPanel(QWidget):
         return self.app.scene is self.bound_scene and self.app.scene.loose_mesh is self.bound_mesh
 
     def start(self):
+        if getattr(self,'bridge_file_task',False):
+            self.status.setText('橋接檔案作業尚未完成，請稍候再開始同步。');return
         if self.process and self.process.poll() is None:
             return
         try:
@@ -388,6 +411,10 @@ class SyncPanel(QWidget):
         else:
             self.schedule.changed(time.monotonic())
 
+    def open_material_review(self):
+        from .material_review import show_review
+        show_review(self)
+
     def document_closed(self, scene):
         if scene is self.bound_scene:
             self.stop()
@@ -426,7 +453,10 @@ class SyncPanel(QWidget):
             self.write_control()
 
     def sync_full_now(self):
-        if self.running:self.force_full_next=True;self.schedule.request()
+        if not self.running:return
+        if QMessageBox.question(self,'強制完整更新','將完整準備並傳送目前模型，耗時較長。確定執行？',
+                                QMessageBox.StandardButton.Yes|QMessageBox.StandardButton.No,QMessageBox.StandardButton.No)!=QMessageBox.StandardButton.Yes:return
+        self.force_full_next=True;self.schedule.request()
 
     def tick(self):
         if not self.process:
@@ -456,7 +486,11 @@ class SyncPanel(QWidget):
                 if self.log_file:self.log_file.close();self.log_file=None
             self.buttons()
             return
-        if self.running and self.renderer_watch and self.renderer_watch.closed(clean_path(self.d5.text()),time.monotonic()):
+        sdk_probe=read_json(self.session.directory/'sdk-status.json',{})
+        sdk_closed=False
+        if self.renderer_watch and hasattr(self.renderer_watch,'observe_sdk') and time.time()-sdk_probe.get('updated_at',0)<10:
+            sdk_closed=self.renderer_watch.observe_sdk(sdk_probe.get('state'),time.monotonic())
+        if self.running and self.renderer_watch and (self.renderer_watch.closed(clean_path(self.d5.text()),time.monotonic()) or sdk_closed):
             if self.source_recorder:
                 self.source_recorder.event('d5_closed',revision=self.session.revision,
                                            acknowledged_revision=self.session.acknowledged,pending=self.session.pending)
@@ -472,8 +506,9 @@ class SyncPanel(QWidget):
                 self.stop()
                 self.status.setText(str(exc))
                 return
-            if (state.get('phase')=='need_full' and state.get('processing_revision')==self.session.revision
-                    and read_json(self.session.directory/'latest.json',{}).get('kind') in ('transforms','partial')
+            if (state.get('phase') in ('need_full','material_conflict') and state.get('processing_revision')==self.session.revision
+                    and read_json(self.session.directory/'latest.json',{}).get('kind') in ('transforms','partial','visibility','full')
+                    and (state.get('phase')!='material_conflict' or self.schedule.dirty or self.schedule.manual)
                     and not editing and not QApplication.mouseButtons()
                     and QApplication.activeModalWidget() is None
                     and not self.exporting and time.monotonic()>=self.schedule.retry_at):
@@ -493,7 +528,7 @@ class SyncPanel(QWidget):
                 if self.schedule.dirty:
                     message += "；有待更新修改，按「更新」傳送一次或按「繼續」。"
             self.status.setText(message)
-            if state.get('phase') in ('error', 'retrying', 'retry_wait'):
+            if state.get('phase') in ('error', 'retrying', 'retry_wait','material_conflict'):
                 self.last_error=message;self.status.setStyleSheet('color: #c33;')
             else:
                 self.status.setStyleSheet('')
@@ -501,7 +536,7 @@ class SyncPanel(QWidget):
                 self.last_metrics_revision = state["revision"]
                 from .perf_diagnostics import decision_reason
                 self.metrics.setText(
-                    ({'transforms':'快速位置更新；','partial':'局部形狀／材質更新；'}.get(state.get('update_kind'),'完整同步；'))+f"第 {state['revision']} 版：來源準備 {state.get('export_seconds', 0):.2f} 秒，"
+                    ({'visibility':'圖層顯示更新；','transforms':'快速位置更新；','partial':'局部形狀／材質更新；'}.get(state.get('update_kind'),'完整同步；'))+f"第 {state['revision']} 版：來源準備 {state.get('export_seconds', 0):.2f} 秒，"
                     f"Blender 接收 {state['import_seconds']:.2f} 秒，"
                     f"D5 傳送 {state['send_seconds']:.2f} 秒。\n"
                     "官方傳送成功不等於畫面已完成渲染收斂。"+
@@ -564,6 +599,8 @@ class SyncPanel(QWidget):
         if reason:self.status.setText(reason)
 
     def shutdown(self):
+        if self.backup_dialog is not None and self.backup_dialog.task is not None:
+            self.backup_dialog.task.wait()
         self.stop(force=True)
 
     def open_folder(self):

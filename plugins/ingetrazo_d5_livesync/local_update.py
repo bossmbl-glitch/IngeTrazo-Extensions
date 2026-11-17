@@ -93,7 +93,7 @@ def prepare_local(baseline,source,ack,output,cache):
                 ignored+=1;continue
             selected.append((key,new))
         isolate=any(meta.get('policy',{}).get(g.get('layer') or 'Layer 0')=='hold' for g in old.values()) or meta.get('policy',{}).get('Layer 0')=='hold'
-        composer=Composer(isolate,previous)
+        composer=Composer(isolate,previous,stable_names='named_materials_v1' in meta)
         composer.members=dict(members);composer.protos=list(previous.scene.get('protos',[]))
         if previous.scene.get('_bridge_visibility_version')==1:
             try:from .visibility import stamp_groups
@@ -110,6 +110,7 @@ def prepare_local(baseline,source,ack,output,cache):
         registry.update(composer.materials);scene['materials']=list(registry.values())
         updated_meta=copy.deepcopy(meta);out[META]=updated_meta;updated_meta['partial_depth']=meta.get('partial_depth',0)+1
         updated_meta[MATERIAL_BINDINGS]=composer.binding_ledger()
+        if composer.named:updated_meta['named_materials_v1']=composer.named.entries
         with zipfile.ZipFile(baseline) as z:origin_bytes=meta.get('partial_origin_bytes',sum(i.file_size for i in z.infolist()))
         updated_meta['partial_origin_bytes']=origin_bytes
         ledger=updated_meta.setdefault('material_aliases_v2',{})
@@ -125,6 +126,6 @@ def prepare_local(baseline,source,ack,output,cache):
             cache.document=out;cache.members=list(composer.members.items());cache.sha256=hashlib.sha256(Path(output).read_bytes()).hexdigest()
         else:cache.document=None;cache.members=None;cache.sha256=None
         affected=[key for key,_ in selected]
-        return affected,{'partial_roots':len(affected),'held_or_excluded_roots':ignored,
+        return affected,{'named_material_changes':sorted(composer.named.changed) if composer.named else [],'partial_roots':len(affected),'held_or_excluded_roots':ignored,
                          'partial_depth':updated_meta['partial_depth'],'d5_lights':meta.get('lights',[]),
                          'd5_light_ids':meta.get('known_light_ids',[])}

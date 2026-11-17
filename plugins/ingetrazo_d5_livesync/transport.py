@@ -69,7 +69,7 @@ class SnapshotSession:
         self.motion_candidate_revision=0;self.motion_base_hash=None;self.motion_protocol=False;self.last_fallback_reason='first_full_sync'
         self.partial_enabled=False;self.partial_protocol=False;self.motion_enabled=True
         write_json(self.directory / "owner.json", {
-            "plugin": "ingetrazo_d5_livesync", "version": "0.9.10-test.6",
+            "plugin": "ingetrazo_d5_livesync", "version": "0.9.11",
             "parent_pid": os.getpid(), "created": time.time(),
         })
 
@@ -81,8 +81,8 @@ class SnapshotSession:
         receiver_reason=''
         if replace_pending:
             state=read_json(self.directory/'status.json',{});latest=read_json(self.directory/'latest.json',{})
-            if (not self.pending or latest.get('kind') not in ('transforms','partial') or state.get('phase')!='need_full'
-                    or state.get('processing_revision')!=self.revision):raise RuntimeError('只能替換接收端明確拒絕、尚未送出的快速版本')
+            replaceable=(latest.get('kind') in ('transforms','partial','visibility') and state.get('phase')=='need_full') or (latest.get('kind')=='full' and state.get('phase')=='material_conflict')
+            if not self.pending or not replaceable or state.get('processing_revision')!=self.revision:raise RuntimeError('接收端尚未確認可安全替換未送出的版本')
             self.last_fallback_reason='worker_requested_full'
             receiver_reason=state.get('message','')
         if self.pending and not replace_pending:
@@ -119,6 +119,22 @@ class SnapshotSession:
         certificate=self.motion_certificate
         candidate=None
         partial_reason='disabled_or_no_confirmed_baseline'
+        if receipt_ready and certificate is not None and not force_full and not replace_pending:
+            try:
+                from .visibility_delta import certify
+                flags,candidate=certify(certificate,self.motion_baseline)
+            except (ValueError,AttributeError,TypeError):pass
+            else:
+                from .layer_scope import host_policy
+                begin_export();target=self.directory/f'visibility-{number:08d}.json'
+                write_json(target,{'protocol':1,'base_revision':self.acknowledged,'base_model_sha256':self.motion_base_hash,
+                                  'layer_policy':host_policy(scene),**flags})
+                manifest={'revision':number,'kind':'visibility','file':target.name,'published_at':time.time(),
+                    'export_seconds':time.perf_counter()-started,'bytes':target.stat().st_size,'source_fast_path':True,
+                    'sync_decision':{'route':'visibility','reason':'certified_layer_visibility','skip_check':skip_check}}
+                write_json(self.directory/'latest.json',manifest)
+                self.motion_candidate=candidate;self.motion_candidate_revision=number;self.revision=number
+                return manifest
         if self.motion_enabled and certificate is not None and self.motion_baseline is not None and self.motion_protocol and not force_full and not replace_pending:
             try:
                 changes,candidate=certificate.delta(self.motion_baseline)
@@ -222,12 +238,12 @@ class SnapshotSession:
             raise ValueError("接收端回報的版本號無效")
         self.acknowledged = max(self.acknowledged, number)
         if (number==self.motion_candidate_revision and status.get('phase') in ('sent','idle')
-                and status.get('official_return_code')==0 and status.get('fast_transform_protocol')==1
+                and status.get('official_return_code')==0 and (status.get('fast_transform_protocol')==1 or status.get('visibility_protocol')==1)
                 and isinstance(status.get('model_sha256'),str) and len(status['model_sha256'])==64):
-            self.motion_baseline=self.motion_candidate;self.motion_base_hash=status['model_sha256'];self.motion_protocol=True
+            self.motion_baseline=self.motion_candidate;self.motion_base_hash=status['model_sha256'];self.motion_protocol=status.get('fast_transform_protocol')==1
             self.partial_protocol=status.get('partial_update_protocol')==1
         # Only delete our old immutable snapshots after acknowledgement.
-        for old in [*self.directory.glob("snapshot-????????.igz"),*self.directory.glob('transforms-????????.json'),*self.directory.glob('partial-????????.igz')]:
+        for old in [*self.directory.glob("visibility-????????.json"),*self.directory.glob("snapshot-????????.igz"),*self.directory.glob('transforms-????????.json'),*self.directory.glob('partial-????????.igz')]:
             try:
                 revision = int(old.stem.split("-")[-1])
                 if revision < self.acknowledged - 1:

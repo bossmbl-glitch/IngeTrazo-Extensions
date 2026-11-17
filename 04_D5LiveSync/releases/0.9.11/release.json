@@ -1,0 +1,333 @@
+{
+  "version": "0.9.11",
+  "formal_release": true,
+  "release_authorization": "User explicitly requested formal release on 2026-11-17 (Asia/Taipei)",
+  "source_trial": "0.9.11-test.2",
+  "source_trial_sha256": "fcc6bb5d76ff919558ad47a64489a01fd4522ee3dd89b8235a97b8535650b126",
+  "changes_since": "0.9.9",
+  "previous_formal_release": "0.9.10",
+  "verification_record": "01_內部驗證紀錄.md",
+  "verification": {
+    "local_tests_passed": 152,
+    "user_reported_prior_checklist_1_to_6": true,
+    "user_reported_trial2_five_changes": true,
+    "restore_and_transfer_real_machine_acceptance": false
+  },
+  "files": {
+    "00_安裝與回復.txt": {
+      "source": "04_D5LiveSync/releases/0.9.11/00_安裝與回復.txt",
+      "bytes": 1430,
+      "sha256": "4f7477855b8b81b6f933d9a9a90b219911627f9ee66959e7fb21dd60f7a5d54c"
+    },
+    "RELEASE_NOTES.md": {
+      "source": "04_D5LiveSync/releases/0.9.11/RELEASE_NOTES.md",
+      "bytes": 3662,
+      "sha256": "41cf33fab9e9a2b3f583f068fe613f3ffdd673c10fa17dcb6f7648a790b15aee"
+    },
+    "ingetrazo_d5_livesync/CHANGELOG.md": {
+      "source": "plugins/ingetrazo_d5_livesync/CHANGELOG.md",
+      "bytes": 17502,
+      "sha256": "6afd9beacca386ed2e809824c538701af0ac3b406e9d6b712e2d6793741ee00a"
+    },
+    "ingetrazo_d5_livesync/LICENSE.txt": {
+      "source": "plugins/ingetrazo_d5_livesync/LICENSE.txt",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    "ingetrazo_d5_livesync/THIRD_PARTY.txt": {
+      "source": "plugins/ingetrazo_d5_livesync/THIRD_PARTY.txt",
+      "bytes": 1432,
+      "sha256": "582adf1a06927d403ce84d89a14d8eb6043b1f19af132aedc344d0f3c437fd80"
+    },
+    "ingetrazo_d5_livesync/__init__.py": {
+      "source": "plugins/ingetrazo_d5_livesync/__init__.py",
+      "bytes": 5590,
+      "sha256": "72c046bc4fbd136675addb9ddadd346fa1d01b96b93616aa3c7855dcbde31ee0"
+    },
+    "ingetrazo_d5_livesync/backup_schedule.py": {
+      "source": "plugins/ingetrazo_d5_livesync/backup_schedule.py",
+      "bytes": 1113,
+      "sha256": "07c5777e43c7185be8f31da96eb63a5139f3d67de9c0a1b3a091cbd5c3220dcf"
+    },
+    "ingetrazo_d5_livesync/backup_service.py": {
+      "source": "plugins/ingetrazo_d5_livesync/backup_service.py",
+      "bytes": 9602,
+      "sha256": "12fbc8c893e353256c606961de27cb3e75c384af18f82667ee7b45083244315b"
+    },
+    "ingetrazo_d5_livesync/backup_tasks.py": {
+      "source": "plugins/ingetrazo_d5_livesync/backup_tasks.py",
+      "bytes": 565,
+      "sha256": "82118131b51f6e635ccd991ab9f09a00cad52af8e9126a506f66a3bf15f76284"
+    },
+    "ingetrazo_d5_livesync/backup_ui.py": {
+      "source": "plugins/ingetrazo_d5_livesync/backup_ui.py",
+      "bytes": 17610,
+      "sha256": "4720c45d04fdbb77cbbb018504902b09629126b54261726aa20a4b75a4e476d9"
+    },
+    "ingetrazo_d5_livesync/bridge_backups.py": {
+      "source": "plugins/ingetrazo_d5_livesync/bridge_backups.py",
+      "bytes": 21890,
+      "sha256": "84e0bc93b5fc670874314a8cd23a95c686f4dcad63f9f7de0a73f1b8e03fe954"
+    },
+    "ingetrazo_d5_livesync/compact_ui.py": {
+      "source": "plugins/ingetrazo_d5_livesync/compact_ui.py",
+      "bytes": 1687,
+      "sha256": "a2a0f3e4b9eeac8b0471984e04a1742d8cd6eacf1cb2cbe0c7cbecebd66aa952"
+    },
+    "ingetrazo_d5_livesync/d5_adapter.py": {
+      "source": "plugins/ingetrazo_d5_livesync/d5_adapter.py",
+      "bytes": 13158,
+      "sha256": "ae6081124f329372a7e6b305f8fe4061e4489ff2bd09eb527915def87b44daf8"
+    },
+    "ingetrazo_d5_livesync/d5_light_ui.py": {
+      "source": "plugins/ingetrazo_d5_livesync/d5_light_ui.py",
+      "bytes": 17444,
+      "sha256": "7b5ac5b89f839d8ad721f8ab8c3ea6c8307aee868054cd666e9d6cd3b4c53438"
+    },
+    "ingetrazo_d5_livesync/d5_lights.py": {
+      "source": "plugins/ingetrazo_d5_livesync/d5_lights.py",
+      "bytes": 5317,
+      "sha256": "0fc36dc37e0f93de30615fb6e4fd27e634660ca2ea7a40c0becc642e1482292a"
+    },
+    "ingetrazo_d5_livesync/discovery.py": {
+      "source": "plugins/ingetrazo_d5_livesync/discovery.py",
+      "bytes": 3144,
+      "sha256": "2df10432a24297b857433c2dd51fc10663f4e21c4bea03de1c69909f80798523"
+    },
+    "ingetrazo_d5_livesync/duplicate_models.py": {
+      "source": "plugins/ingetrazo_d5_livesync/duplicate_models.py",
+      "bytes": 22516,
+      "sha256": "feda36819f5dbf0e5ad7c902f8fb6adbedfd8265e229b4c88b9e016c8fa65052"
+    },
+    "ingetrazo_d5_livesync/duplicate_ui.py": {
+      "source": "plugins/ingetrazo_d5_livesync/duplicate_ui.py",
+      "bytes": 1466,
+      "sha256": "e52c26ccd04c3745217136b1cb49b616380e71dacab8c3fbab44aebdd5a23168"
+    },
+    "ingetrazo_d5_livesync/fixture_lights.py": {
+      "source": "plugins/ingetrazo_d5_livesync/fixture_lights.py",
+      "bytes": 8608,
+      "sha256": "2bf6b2c1b5cbcdd0d3ee11fb33d6ce8fa54ea51adc317996f87c1bf1572c008c"
+    },
+    "ingetrazo_d5_livesync/host_activity.py": {
+      "source": "plugins/ingetrazo_d5_livesync/host_activity.py",
+      "bytes": 495,
+      "sha256": "97b10cadf6f10a10125cbca13126b53272d725c849e60a0c8a03c75a1b23f26a"
+    },
+    "ingetrazo_d5_livesync/host_motion.py": {
+      "source": "plugins/ingetrazo_d5_livesync/host_motion.py",
+      "bytes": 28232,
+      "sha256": "df9c5f10905fdcc3cef6b89b9002a5ddebd9ed1a03b75713efa50961a1c65ea8"
+    },
+    "ingetrazo_d5_livesync/icons/light_point.svg": {
+      "source": "plugins/ingetrazo_d5_livesync/icons/light_point.svg",
+      "bytes": 292,
+      "sha256": "899bca40788cc16695a9271f0ace3dc54f39f5e3cfd3c90f8bb6ede41d3742c6"
+    },
+    "ingetrazo_d5_livesync/icons/light_spot.svg": {
+      "source": "plugins/ingetrazo_d5_livesync/icons/light_spot.svg",
+      "bytes": 312,
+      "sha256": "20587168d9cb8689f6f983fc40f8af681c28c75c79190c626accb2823caff761"
+    },
+    "ingetrazo_d5_livesync/incremental.py": {
+      "source": "plugins/ingetrazo_d5_livesync/incremental.py",
+      "bytes": 11395,
+      "sha256": "5fc7ea55c1b8940e135744e0963a8347fddf65c6f732457a71bdd47ecdbe0d03"
+    },
+    "ingetrazo_d5_livesync/launcher.py": {
+      "source": "plugins/ingetrazo_d5_livesync/launcher.py",
+      "bytes": 1602,
+      "sha256": "39c6de65abc3e006310f7979b3b983b1d85486ab76c70a0ce03dd3d8e2722e29"
+    },
+    "ingetrazo_d5_livesync/layer_scope.py": {
+      "source": "plugins/ingetrazo_d5_livesync/layer_scope.py",
+      "bytes": 30111,
+      "sha256": "e1f8ddf561c8147369494cfcf8daa402bdcb72c59e04307aa817289252348028"
+    },
+    "ingetrazo_d5_livesync/layer_ui.py": {
+      "source": "plugins/ingetrazo_d5_livesync/layer_ui.py",
+      "bytes": 8485,
+      "sha256": "7341ff0856319e4505a1e4f46733a77882fb781ec67e26c43de53a6b2f187242"
+    },
+    "ingetrazo_d5_livesync/light_data.py": {
+      "source": "plugins/ingetrazo_d5_livesync/light_data.py",
+      "bytes": 2696,
+      "sha256": "8fc5ea9c576f4eb19bc4ca320b9eec9a0598162c77cc063dcb6c7bd2ae414932"
+    },
+    "ingetrazo_d5_livesync/light_drag.py": {
+      "source": "plugins/ingetrazo_d5_livesync/light_drag.py",
+      "bytes": 7204,
+      "sha256": "94faf1c494d800253b66b2fb67bc0fc5b83990693d565f62cc263f178e1d3564"
+    },
+    "ingetrazo_d5_livesync/light_proxy.py": {
+      "source": "plugins/ingetrazo_d5_livesync/light_proxy.py",
+      "bytes": 9694,
+      "sha256": "29182c995fe2a2187398a11683ceec45008f0972d3f615ed65dfd6a98aec4a11"
+    },
+    "ingetrazo_d5_livesync/lighting.py": {
+      "source": "plugins/ingetrazo_d5_livesync/lighting.py",
+      "bytes": 7495,
+      "sha256": "c218391d2a57b3c0592e271d9305429138bde320936c8cf46e2c984da367e881"
+    },
+    "ingetrazo_d5_livesync/local_importer.py": {
+      "source": "plugins/ingetrazo_d5_livesync/local_importer.py",
+      "bytes": 4847,
+      "sha256": "7e7fa98071f92953d11f03afddad663a40e1afe5491413f90f64fa6a9c7a4a57"
+    },
+    "ingetrazo_d5_livesync/local_update.py": {
+      "source": "plugins/ingetrazo_d5_livesync/local_update.py",
+      "bytes": 8799,
+      "sha256": "9282fbc6e218bf0e9a7d8918fa9a105211f74cc8b1c02351929fcb95faabb460"
+    },
+    "ingetrazo_d5_livesync/material_audit.py": {
+      "source": "plugins/ingetrazo_d5_livesync/material_audit.py",
+      "bytes": 4289,
+      "sha256": "dbf60d61fb2a70723228b348249dc06166439a97d33625085b902fad46bef146"
+    },
+    "ingetrazo_d5_livesync/material_identity.py": {
+      "source": "plugins/ingetrazo_d5_livesync/material_identity.py",
+      "bytes": 675,
+      "sha256": "c809eabfc068847943cc792b969ad9fa69ad4b8d041deaef91a93e7e1f98018f"
+    },
+    "ingetrazo_d5_livesync/material_review.py": {
+      "source": "plugins/ingetrazo_d5_livesync/material_review.py",
+      "bytes": 3414,
+      "sha256": "571ad757610846d2db90d5a9207f46050486775df6ac1aa82273659a84170527"
+    },
+    "ingetrazo_d5_livesync/motion_delta.py": {
+      "source": "plugins/ingetrazo_d5_livesync/motion_delta.py",
+      "bytes": 7000,
+      "sha256": "64d276da3c078d9916a83e354e51c6a02622af648fba22d5236f99cd63830107"
+    },
+    "ingetrazo_d5_livesync/named_materials.py": {
+      "source": "plugins/ingetrazo_d5_livesync/named_materials.py",
+      "bytes": 6460,
+      "sha256": "47ac8f156d8d2bc5728eaae48e9287505924525e973f28dcbf73500d47ec7c54"
+    },
+    "ingetrazo_d5_livesync/official_log.py": {
+      "source": "plugins/ingetrazo_d5_livesync/official_log.py",
+      "bytes": 3256,
+      "sha256": "561900495c8b2ac51d63486f80ae8b7de35c6607276d5e569f1025aea34133a4"
+    },
+    "ingetrazo_d5_livesync/optimization_backup.py": {
+      "source": "plugins/ingetrazo_d5_livesync/optimization_backup.py",
+      "bytes": 1943,
+      "sha256": "fce226ad3a56e191f9ef2d175f4804291ac70d024e8b951e4c7eacddb17ae461"
+    },
+    "ingetrazo_d5_livesync/panel.py": {
+      "source": "plugins/ingetrazo_d5_livesync/panel.py",
+      "bytes": 35624,
+      "sha256": "e2e5c7759f0753b530c59e86914bef5b3654d3cb398736247cd3fef8c59b771b"
+    },
+    "ingetrazo_d5_livesync/perf_diagnostics.py": {
+      "source": "plugins/ingetrazo_d5_livesync/perf_diagnostics.py",
+      "bytes": 15310,
+      "sha256": "1e376a823ae537da3dd62e05d62ca0700c373a27b13932bd3286347e0dfe382f"
+    },
+    "ingetrazo_d5_livesync/preflight.py": {
+      "source": "plugins/ingetrazo_d5_livesync/preflight.py",
+      "bytes": 3131,
+      "sha256": "a115bae8a291d2db864c3cf546bfbdae7d40d3a85626d137e2f9c6c07a6b6266"
+    },
+    "ingetrazo_d5_livesync/project_store.py": {
+      "source": "plugins/ingetrazo_d5_livesync/project_store.py",
+      "bytes": 2841,
+      "sha256": "9c091a94e7770cb0868bbf602e1c7515b8ab52b5cd6f296ba6d70d08e72b3467"
+    },
+    "ingetrazo_d5_livesync/project_transfer.py": {
+      "source": "plugins/ingetrazo_d5_livesync/project_transfer.py",
+      "bytes": 11005,
+      "sha256": "8d936f43b75f77a97ead92c402f04ba3e2f93037dcd4aaaaa2304b10309372bf"
+    },
+    "ingetrazo_d5_livesync/renderer_watch.py": {
+      "source": "plugins/ingetrazo_d5_livesync/renderer_watch.py",
+      "bytes": 5232,
+      "sha256": "885191bdb7b5ddaf5eec0922f2d520e12d3dd87b63a1cc6f5ee60466cd02a63f"
+    },
+    "ingetrazo_d5_livesync/schedule.py": {
+      "source": "plugins/ingetrazo_d5_livesync/schedule.py",
+      "bytes": 2626,
+      "sha256": "06a532c832e7ffc8dd8f27288c688eeac3a17fbaeed1b8b46dcb271d2c491460"
+    },
+    "ingetrazo_d5_livesync/status_model.py": {
+      "source": "plugins/ingetrazo_d5_livesync/status_model.py",
+      "bytes": 8205,
+      "sha256": "888c5a257d0d776984d1d2c8bc896bbf7bf89508450ec9855be7d5ea6d43c70b"
+    },
+    "ingetrazo_d5_livesync/status_ui.py": {
+      "source": "plugins/ingetrazo_d5_livesync/status_ui.py",
+      "bytes": 6474,
+      "sha256": "8541b031a1ff1ee50ab9e51760952bf14c78dba466cc79ed1469a290ca50f6df"
+    },
+    "ingetrazo_d5_livesync/sync_plan.py": {
+      "source": "plugins/ingetrazo_d5_livesync/sync_plan.py",
+      "bytes": 1703,
+      "sha256": "13896443082dcb1aba2ac43bd0005cd452d23765f709e34c824c661e72feb72e"
+    },
+    "ingetrazo_d5_livesync/transport.py": {
+      "source": "plugins/ingetrazo_d5_livesync/transport.py",
+      "bytes": 16049,
+      "sha256": "f3c847f77b4c89706e98b3aec95f50283e70ffd2a4465db0f4e398ff89e754f4"
+    },
+    "ingetrazo_d5_livesync/vendor/ingetrazo_io/__init__.py": {
+      "source": "plugins/ingetrazo_d5_livesync/vendor/ingetrazo_io/__init__.py",
+      "bytes": 17550,
+      "sha256": "84d3be1df7e52edfbb12b4939b6003643a69066f9db2d76d2fab66d3aefcc00e"
+    },
+    "ingetrazo_d5_livesync/vendor/ingetrazo_io/ambience.py": {
+      "source": "plugins/ingetrazo_d5_livesync/vendor/ingetrazo_io/ambience.py",
+      "bytes": 7266,
+      "sha256": "cc80de41a38dfccf6ca9488931bf86572f3fa04abb479432bf200a0c2e7934e0"
+    },
+    "ingetrazo_d5_livesync/vendor/ingetrazo_io/blender_manifest.toml": {
+      "source": "plugins/ingetrazo_d5_livesync/vendor/ingetrazo_io/blender_manifest.toml",
+      "bytes": 483,
+      "sha256": "d882856427d9147b5c838a878ee1f838791589640030c6cce5a6c353e3d5918d"
+    },
+    "ingetrazo_d5_livesync/vendor/ingetrazo_io/build.py": {
+      "source": "plugins/ingetrazo_d5_livesync/vendor/ingetrazo_io/build.py",
+      "bytes": 50696,
+      "sha256": "ef12d686221394635d8db014af64825486151183812993d740f075a50328eb57"
+    },
+    "ingetrazo_d5_livesync/vendor/ingetrazo_io/finish.py": {
+      "source": "plugins/ingetrazo_d5_livesync/vendor/ingetrazo_io/finish.py",
+      "bytes": 5787,
+      "sha256": "6e37519251f882b371aee36e22f8d90d3e130ff37a26720218b3cdc2185e949d"
+    },
+    "ingetrazo_d5_livesync/vendor/ingetrazo_io/igz.py": {
+      "source": "plugins/ingetrazo_d5_livesync/vendor/ingetrazo_io/igz.py",
+      "bytes": 22973,
+      "sha256": "c8facf9caeb17e1a1af43aca7a58f8129a35e8b29508d7fdfaabfda2887a0294"
+    },
+    "ingetrazo_d5_livesync/vendor/ingetrazo_io/writeback.py": {
+      "source": "plugins/ingetrazo_d5_livesync/vendor/ingetrazo_io/writeback.py",
+      "bytes": 15546,
+      "sha256": "83f4caff60c4077973823b21b486e144b19b6180f066a46f916744e3318b227f"
+    },
+    "ingetrazo_d5_livesync/visibility.py": {
+      "source": "plugins/ingetrazo_d5_livesync/visibility.py",
+      "bytes": 3433,
+      "sha256": "773bdf39f3a90225e73e133cf99ae2eda38bb2318a016c83f2192e30ad047e37"
+    },
+    "ingetrazo_d5_livesync/visibility_delta.py": {
+      "source": "plugins/ingetrazo_d5_livesync/visibility_delta.py",
+      "bytes": 4065,
+      "sha256": "894eb5a9efc5ddcdc5bba86216460dacee4d17e8fddb930ce94deb68182e41b6"
+    },
+    "ingetrazo_d5_livesync/worker.py": {
+      "source": "plugins/ingetrazo_d5_livesync/worker.py",
+      "bytes": 31354,
+      "sha256": "1e461dd84cc9deb2a331dac2880de4fba7c0ed2188037b6c3727b1c99da1eaac"
+    },
+    "ingetrazo_d5_livesync/使用說明.txt": {
+      "source": "plugins/ingetrazo_d5_livesync/使用說明.txt",
+      "bytes": 13875,
+      "sha256": "524464f765688a4dc89da39e1d88836d5ea7aeadde178190b98f4d603da03972"
+    },
+    "累積更新紀錄.md": {
+      "source": "plugins/ingetrazo_d5_livesync/CHANGELOG.md",
+      "bytes": 17502,
+      "sha256": "6afd9beacca386ed2e809824c538701af0ac3b406e9d6b712e2d6793741ee00a"
+    }
+  }
+}

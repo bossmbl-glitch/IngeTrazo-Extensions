@@ -186,7 +186,8 @@ def referenced_scope_materials(scene):
 
 
 class Composer:
-    def __init__(self, isolate_current, previous=None, compact_legacy=False):
+    def __init__(self, isolate_current, previous=None, compact_legacy=False,stable_names=False):
+        self.named=None
         self.members = {}
         self.asset_map = {}
         self.protos = []
@@ -241,6 +242,12 @@ class Composer:
                     for key in keys:self.bindings.setdefault(scope,{}).setdefault(key,set()).add(name)
         for keys in self.bindings.values():
             for names in keys.values():self.previous_names.update(n for n in names if isinstance(n,str) and n.startswith('_scope_'))
+        if stable_names:self.enable_named(previous)
+
+    def enable_named(self,previous):
+        try:from .named_materials import NamedMaterials
+        except ImportError:from named_materials import NamedMaterials
+        self.named=NamedMaterials(self,previous)
 
     @staticmethod
     def scope_key(group):
@@ -373,6 +380,7 @@ class Composer:
             if legacy in self.previous_names:self.candidates.setdefault(key,set()).add(legacy)
 
     def isolate(self, out, original, bundle):
+        if self.named and self.named.resolve(out,original,bundle):return
         key,legacy,finish=self.material_info(original,bundle)
         retained=self.bindings.get(self.material_scope,{}).get(key,set())
         unmapped=self.unmapped_scopes.get(self.material_scope,set())
@@ -417,7 +425,7 @@ class Composer:
 
 
 def compose(current_path, baseline_path, policy, output_path, lights=None,
-            light_layer_map=None, known_light_ids=None, compact_legacy=False):
+            light_layer_map=None, known_light_ids=None, compact_legacy=False,stable_names=False):
     """Return metrics + complete light batch. Caller commits baseline only
     after D5 send AND atomic Blender-ID checkpoint both succeed.
     """
@@ -428,6 +436,7 @@ def compose(current_path, baseline_path, policy, output_path, lights=None,
         previous = Bundle(baseline_path) if baseline_path else None
         if any(mode == 'hold' for mode in policy.values()) and previous is None:
             raise ValueError('尚無0.9版成功同步基準；請先將圖層設為正常同步並成功更新一次，再暫時不更新')
+        if compact_legacy and stable_names:raise ValueError('名稱識別保護模式不可合併舊材質，請關閉材質整理')
         if compact_legacy and any(mode=='hold' for mode in policy.values()):
             raise ValueError('暫時不更新時不可執行舊材質整理；請關閉材質整理以保護既有 D5 關聯')
         incoming = _roots(current, bool(policy))
@@ -457,7 +466,7 @@ def compose(current_path, baseline_path, policy, output_path, lights=None,
                 selected_new.append(after)
         loose_mode = policy.get(DEFAULT_LAYER, 'normal')
         frozen_loose = loose_mode == 'hold' and previous is not None
-        composer = Composer(bool(selected_old) or frozen_loose, previous, compact_legacy)
+        composer = Composer(bool(selected_old) or frozen_loose, previous, compact_legacy,stable_names)
         try:from .visibility import stamp_groups,loose_visibility,VERSION_KEY,LOOSE
         except ImportError:from visibility import stamp_groups,loose_visibility,VERSION_KEY,LOOSE
         # Snapshot each root's display, independent from shared tag collections.
@@ -529,9 +538,10 @@ def compose(current_path, baseline_path, policy, output_path, lights=None,
                 if isinstance(names,list):
                     kept={name for name in names if isinstance(name,str) and name.startswith('_scope_')}
                     alias_ledger[key]=sorted(kept|set(alias_ledger.get(key,[])))
-        meta = {'format':1,'policy':policy,'lights':effective_lights,
+        meta = {'format':1,'policy':policy,'source_layer_visibility':{DEFAULT_LAYER:True,**{x.get('name'):x.get('visible',True) for x in current.scene.get('layers',[]) if isinstance(x,dict)}},'lights':effective_lights,
                 'light_layers':effective_map,'known_light_ids':known,
                 'material_aliases_v2':alias_ledger,MATERIAL_BINDINGS:composer.binding_ledger()}
+        if composer.named:meta['named_materials_v1']=composer.named.entries
         output = {k:copy.deepcopy(v) for k,v in current.data.items() if k not in ('scene',META)}
         output.update(scene=scene)
         output[META] = meta
@@ -544,6 +554,8 @@ def compose(current_path, baseline_path, policy, output_path, lights=None,
                 'layer_policy':policy,'d5_lights':effective_lights,'d5_light_ids':known,
                 'isolated_materials':len({name for names in composer.aliases.values() for name in names}),
                 'logical_materials':len(composer.aliases),'legacy_names_preserved':len(composer.retained_legacy),
+                'named_material_changes':sorted(composer.named.changed) if composer.named else [],
+                'named_material_migrated':bool(stable_names and previous and 'named_materials_v1' not in previous_meta),
                 'visibility_protocol':1,
                 'visibility_migrated':bool(previous and previous.scene.get(VERSION_KEY)!=1),
                 'material_identity_version':1,

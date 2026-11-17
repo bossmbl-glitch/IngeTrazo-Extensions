@@ -7,12 +7,15 @@ full send. State is committed only after a successful receipt.
 def plan(previous, current):
     if previous is None or previous.keys() != current.keys():
         return 'full', []
-    changed=[]
+    changed=[];visible=[]
     for key, value in current.items():
         if value[0] != previous[key][0]:
-            return 'full', []
+            a=value[0];b=previous[key][0]
+            if a[:5]+a[7:]!=b[:5]+b[7:] or value[1]!=previous[key][1]:return 'full', []
+            visible.append(key)
         if value[1] != previous[key][1]:
             changed.append(key)
+    if visible:return ('visibility',visible) if not changed else ('full',[])
     return ('transforms', changed) if changed else ('unchanged', [])
 
 

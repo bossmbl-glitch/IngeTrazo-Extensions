@@ -84,6 +84,7 @@ def main(directory):
     baseline = None
     material_optimization_backup = None
     last_metrics = {}
+    backups=None;prepared=None;recovery_needed=False;confirmed_send=None
     recorder=PerfRecorder(directory)
     def status(state, message, **extra):
         nonlocal phase
@@ -105,7 +106,8 @@ def main(directory):
         from project_store import ProjectLease, checkpoint, material_ids
         lease = ProjectLease(project).acquire()
         from bridge_backups import (bootstrap_state,create_point,prepare_checkpoint,
-                                    recover_checkpoint,recover_restore,prune_points,VERSION)
+                                    recover_checkpoint,recover_restore,recover_deletions,finish_checkpoint,file_stamp,VERSION)
+        recover_deletions(project)
         recover_restore(project)
         recover_checkpoint(project)
         addon = None
@@ -154,6 +156,11 @@ def main(directory):
             rebound=rebind_model_owners(bpy.data,saved,model_file)
             if rebound:recorder.event('transfer_ownership_rebound',properties=rebound)
         importer = IncrementalImporter()
+        from backup_service import BackupService
+        backups=BackupService(project)
+        from named_materials import MaterialConflict
+        from schedule import RecoveryGate
+        recovery=RecoveryGate();last_sdk_probe=0.
         last_heartbeat = 0
         initial = True
         retry = RetryGate()
@@ -164,6 +171,14 @@ def main(directory):
             control = read_json(directory / "control.json", {})
             if control.get("stop"):
                 break
+            backups.retry_jobs();backups.tick()
+            last_metrics['backup_in_progress']=backups.pending or not backups.queue.empty()
+            last_metrics['bridge_backup_warning']=backups.error
+            if time.monotonic()-last_sdk_probe>=1.:
+                try:
+                    write_json(directory/'sdk-status.json',{'state':str(adapter.state()),'updated_at':time.time()})
+                except Exception as exc:recorder.event('sdk_state_probe_failed',error=str(exc))
+                last_sdk_probe=time.monotonic()
             latest = read_json(directory / "latest.json", {})
             revision = int(latest.get("revision", 0))
             if revision <= ack:
@@ -175,14 +190,28 @@ def main(directory):
             if control.get("paused") and revision > int(control.get("allowed_revision", 0)):
                 time.sleep(0.2)
                 continue
+            new_retry_cycle=(retry.revision!=revision or retry.request_id!=control.get('retry_request',0))
             if not retry.ready(revision, time.monotonic(), control.get("retry_request", 0)):
                 time.sleep(0.2)
                 continue
+            if new_retry_cycle:recovery.reset()
             try:
-                if recover_checkpoint(project):
+                with backups.guard:checkpoint_recovered=recover_checkpoint(project)
+                if checkpoint_recovered:
                     from bridge_backups import current_state
                     baseline=project/current_state(project)['scope_file']
                     recorder.event('checkpoint_recovered',revision=revision)
+                if recovery_needed:
+                    ready=adapter.state()==adapter.sdk.D5RenderInProject and not adapter.busy()
+                    if not recovery.check(ready,time.monotonic()):
+                        if recovery.expired(time.monotonic()):
+                            retry.failures=4
+                            status('retry_wait','D5 連線狀態未恢復，已停止自動重試；請確認專案後按更新',processing_revision=revision)
+                        elif time.monotonic()-last_heartbeat>3:
+                            status('waiting_d5','同步失敗後等待 D5 專案穩定就緒；不重建模型',processing_revision=revision)
+                            last_heartbeat=time.monotonic()
+                        time.sleep(.2);continue
+                    adapter.recover_connection();recovery_needed=False;recovery.reset()
                 if adapter.busy():
                     if busy_started is None:busy_started=time.perf_counter()
                     if time.monotonic() - last_heartbeat > 3:
@@ -192,93 +221,108 @@ def main(directory):
                     continue
                 busy_wait_seconds=time.perf_counter()-busy_started if busy_started is not None else 0.
                 busy_started=None
-                motion=latest.get('kind')=='transforms'
-                local=latest.get('kind')=='partial'
-                update_kind='transforms' if motion else 'partial' if local else 'full'
-                filename = f"transforms-{revision:08d}.json" if motion else f"partial-{revision:08d}.igz" if local else f"snapshot-{revision:08d}.igz"
-                if latest.get("file") != filename:
-                    raise RuntimeError("快照檔名或版本不一致")
-                started = time.perf_counter()
-                status("composing", f"正在合併第 {revision} 版圖層與材質", processing_revision=revision)
-                # Stable document path preserves importer object keys on reload;
-                # the source revision remains immutable until acknowledged.
-                pending = project / "model.igz.pending"
-                if motion:
-                    if not config.get('fast_transforms') or initial or not baseline:raise DeltaRejected('尚無本連線的快速更新基準')
-                    from motion_delta import prepare_patch,apply_placements
-                    payload=read_json(directory/filename,{})
-                    updates,motion_stats=prepare_patch(baseline,payload,ack,pending,cache=patch_cache)
-                    scope={**last_metrics.get('layer_scope',{}),'d5_lights':motion_stats['d5_lights'],'d5_light_ids':motion_stats['d5_light_ids']}
-                elif local:
-                    if not config.get('partial_updates') or initial or not baseline:raise DeltaRejected('尚無局部更新基準')
-                    if config.get('compact_legacy_materials'):raise DeltaRejected('材質整理模式需完整同步')
-                    from local_update import prepare_local
-                    local_keys,local_stats=prepare_local(baseline,directory/filename,ack,pending,patch_cache)
-                    scope={**last_metrics.get('layer_scope',{}),**local_stats}
-                else:scope = compose(directory / filename, baseline, latest.get('layer_policy', {}), pending,
-                                lights=latest.get('d5_lights', []),
-                                light_layer_map=latest.get('d5_light_layers', {}),
-                                known_light_ids=latest.get('d5_light_ids', []),
-                                compact_legacy=bool(config.get('compact_legacy_materials',False)))
-                if baseline is not None and bridge_file.exists():
-                    reasons=['before_sync']
-                    if not motion and not local:
-                        if scope.get('visibility_migrated'):reasons.append('visibility_upgrade')
-                        if scope.get('material_identity_migrated'):reasons.append('identity_migration')
-                        if scope.get('material_policy_changed'):reasons.append('layer_policy_change')
-                        if scope.get('legacy_aliases_collapsed',0):reasons.append('material_compaction')
-                    point=create_point(project,reasons,pinned=len(reasons)>1)
-                    scope['bridge_restore_point']=str(point)
-                    recorder.event('bridge_restore_point',revision=revision,path=str(point),reasons=reasons)
-                if (scope.get('legacy_aliases_collapsed',0)>0 and material_optimization_backup is None
-                        and baseline is not None and bridge_file.exists()):
-                    from optimization_backup import backup_bridge_identity
-                    material_optimization_backup=backup_bridge_identity(project,baseline)
-                composed_at = time.perf_counter()
-                status('transforming' if motion else 'updating_local' if local else 'importing',
-                       f'Blender 正在套用第 {revision} 版位置更新' if motion else f'Blender 正在局部更新第 {revision} 版群組／材質' if local else f"Blender 正在匯入第 {revision} 版模型",processing_revision=revision)
-                # This worker owns its imported collections. Reset visibility so
-                # a previously hidden IngeTrazo tag can become visible again.
-                if motion:
-                    apply_placements(bpy,updates,model_file)
-                    os.replace(pending,model_file)
-                    stats={**last_metrics.get('stats',{}),'meshes_built':0,'blocks_decoded':0,'blocks_reused':0,
-                           'parse_seconds':0.,'build_seconds':0.,'importer_skipped':True,'placement_groups_updated':len(updates)}
-                elif local:
-                    from local_importer import load_local
-                    os.replace(pending,model_file)
-                    stats=load_local(importer,bpy.context,str(model_file),local_keys,patch_cache.document)
+                if prepared is not None and prepared[0]==revision:
+                    motion,local,visible,update_kind,scope,stats,started,composed_at,imported_at,duplicate_scan_seconds,initial_bridge_save_seconds,duplicate_report=prepared[1]
+                    recorder.event('prepared_revision_reused',revision=revision,attempt=retry.failures+1)
                 else:
-                    os.replace(pending,model_file)
-                    for collection in bpy.data.collections:
-                        if collection.get("ingetrazo_doc") == str(model_file):
-                            collection.hide_viewport = False
-                            collection.hide_render = False
-                    stats = importer.load(bpy.context, str(model_file))
-                bpy.context.view_layer.update()
-                imported_at = time.perf_counter()
-                duplicate_started=time.perf_counter()
-                if motion:
-                    from motion_delta import refresh_report
-                    duplicate_report=refresh_report(read_json(directory/'duplicate-models-latest.json',{}),bpy,revision)
-                elif config.get('duplicate_scan',True):
-                    status('analyzing','正在辨識重複模型',processing_revision=revision)
-                    try:
-                        from duplicate_models import scan_duplicates
-                        duplicate_report=scan_duplicates(bpy,cache=duplicate_cache)
-                    except Exception as exc:
-                        duplicate_report={'summary':{'complete':False},'errors':[str(exc)],'applied':False,'sdk_instancing_verified':False}
-                else:
-                    duplicate_report={'enabled':False,'summary':{'disabled':True},'applied':False,'sdk_instancing_verified':False}
-                duplicate_report['revision']=revision
-                recorder.snapshot('duplicate-models-latest.json',duplicate_report)
-                duplicate_scan_seconds=time.perf_counter()-duplicate_started
-                recorder.event('duplicate_scan',revision=revision,summary=duplicate_report.get('summary'),errors=duplicate_report.get('errors',[]))
-                initial_save_started=time.perf_counter()
-                if initial and not restored:
-                    bpy.ops.wm.save_as_mainfile(filepath=str(bridge_file), check_existing=False,
-                                               compress=False)
-                initial_bridge_save_seconds=time.perf_counter()-initial_save_started
+                    motion=latest.get('kind')=='transforms'
+                    local=latest.get('kind')=='partial'
+                    visible=latest.get('kind')=='visibility'
+                    update_kind='visibility' if visible else 'transforms' if motion else 'partial' if local else 'full'
+                    filename = f"visibility-{revision:08d}.json" if visible else f"transforms-{revision:08d}.json" if motion else f"partial-{revision:08d}.igz" if local else f"snapshot-{revision:08d}.igz"
+                    if latest.get("file") != filename:
+                        raise RuntimeError("快照檔名或版本不一致")
+                    started = time.perf_counter()
+                    status("composing", f"正在合併第 {revision} 版圖層與材質", processing_revision=revision)
+                    # Stable document path preserves importer object keys on reload;
+                    # the source revision remains immutable until acknowledged.
+                    pending = project / "model.igz.pending"
+                    if visible:
+                        if initial or not baseline:raise DeltaRejected('尚無顯示更新基準')
+                        from visibility_delta import prepare
+                        visibility_scene,visibility_stats=prepare(baseline,read_json(directory/filename,{}),ack,pending,patch_cache)
+                        scope={**last_metrics.get('layer_scope',{}),**visibility_stats}
+                    elif motion:
+                        if not config.get('fast_transforms') or initial or not baseline:raise DeltaRejected('尚無本連線的快速更新基準')
+                        from motion_delta import prepare_patch,apply_placements
+                        payload=read_json(directory/filename,{})
+                        updates,motion_stats=prepare_patch(baseline,payload,ack,pending,cache=patch_cache)
+                        scope={**last_metrics.get('layer_scope',{}),'d5_lights':motion_stats['d5_lights'],'d5_light_ids':motion_stats['d5_light_ids']}
+                    elif local:
+                        if not config.get('partial_updates') or initial or not baseline:raise DeltaRejected('尚無局部更新基準')
+                        if config.get('compact_legacy_materials'):raise DeltaRejected('材質整理模式需完整同步')
+                        from local_update import prepare_local
+                        local_keys,local_stats=prepare_local(baseline,directory/filename,ack,pending,patch_cache)
+                        scope={**last_metrics.get('layer_scope',{}),**local_stats}
+                    else:scope = compose(directory / filename, baseline, latest.get('layer_policy', {}), pending,
+                                    lights=latest.get('d5_lights', []),
+                                    light_layer_map=latest.get('d5_light_layers', {}),
+                                    known_light_ids=latest.get('d5_light_ids', []),
+                                    compact_legacy=bool(config.get('compact_legacy_materials',False)),stable_names=True)
+                    if baseline is not None and bridge_file.exists():
+                        reasons=[]
+                        if not motion and not local and not visible:
+                            for field,reason in [('visibility_migrated','visibility_upgrade'),('named_material_migrated','named_identity_upgrade'),('material_identity_migrated','identity_migration'),('material_policy_changed','layer_policy_change')]:
+                                if scope.get(field):reasons.append(reason)
+                        protected=backups.preserve(reasons)
+                        if protected:recorder.event('bridge_pair_preserved',revision=revision,path=protected,reasons=reasons)
+                    if not motion and not visible:
+                        recorder.snapshot('material-conflicts.json',{})
+                        from layer_scope import Bundle
+                        report_bundle=Bundle(pending)
+                        try:recorder.snapshot('named-materials-latest.json',{'revision':revision,'confirmed':False,'materials':report_bundle.data.get('_bridge_layer_scope',{}).get('named_materials_v1',{}),'source_changes':scope.get('named_material_changes',[])})
+                        finally:report_bundle.close()
+                    composed_at = time.perf_counter()
+                    status('updating_visibility' if visible else 'transforming' if motion else 'updating_local' if local else 'importing',
+                           f'正在套用第 {revision} 版圖層顯示' if visible else f'Blender 正在套用第 {revision} 版位置更新' if motion else f'Blender 正在局部更新第 {revision} 版群組／材質' if local else f"Blender 正在匯入第 {revision} 版模型",processing_revision=revision)
+                    # This worker owns its imported collections. Reset visibility so
+                    # a previously hidden IngeTrazo tag can become visible again.
+                    if visible:
+                        from visibility import apply_visibility
+                        stats={**last_metrics.get('stats',{}),'meshes_built':0,'blocks_decoded':0,'blocks_reused':0,
+                               'visibility_objects':apply_visibility(bpy.data,visibility_scene,str(model_file)),'importer_skipped':True,'parse_seconds':0.,'build_seconds':0.}
+                        os.replace(pending,model_file)
+                    elif motion:
+                        apply_placements(bpy,updates,model_file)
+                        os.replace(pending,model_file)
+                        stats={**last_metrics.get('stats',{}),'meshes_built':0,'blocks_decoded':0,'blocks_reused':0,
+                               'parse_seconds':0.,'build_seconds':0.,'importer_skipped':True,'placement_groups_updated':len(updates)}
+                    elif local:
+                        from local_importer import load_local
+                        os.replace(pending,model_file)
+                        stats=load_local(importer,bpy.context,str(model_file),local_keys,patch_cache.document)
+                    else:
+                        os.replace(pending,model_file)
+                        for collection in bpy.data.collections:
+                            if collection.get("ingetrazo_doc") == str(model_file):
+                                collection.hide_viewport = False
+                                collection.hide_render = False
+                        stats = importer.load(bpy.context, str(model_file))
+                    bpy.context.view_layer.update()
+                    imported_at = time.perf_counter()
+                    duplicate_started=time.perf_counter()
+                    if motion or visible:
+                        from motion_delta import refresh_report
+                        duplicate_report=refresh_report(read_json(directory/'duplicate-models-latest.json',{}),bpy,revision)
+                    elif config.get('duplicate_scan',True):
+                        status('analyzing','正在辨識重複模型',processing_revision=revision)
+                        try:
+                            from duplicate_models import scan_duplicates
+                            duplicate_report=scan_duplicates(bpy,cache=duplicate_cache)
+                        except Exception as exc:
+                            duplicate_report={'summary':{'complete':False},'errors':[str(exc)],'applied':False,'sdk_instancing_verified':False}
+                    else:
+                        duplicate_report={'enabled':False,'summary':{'disabled':True},'applied':False,'sdk_instancing_verified':False}
+                    duplicate_report['revision']=revision
+                    recorder.snapshot('duplicate-models-latest.json',duplicate_report)
+                    duplicate_scan_seconds=time.perf_counter()-duplicate_started
+                    recorder.event('duplicate_scan',revision=revision,summary=duplicate_report.get('summary'),errors=duplicate_report.get('errors',[]))
+                    initial_save_started=time.perf_counter()
+                    if initial and not restored:
+                        bpy.ops.wm.save_as_mainfile(filepath=str(bridge_file), check_existing=False,
+                                                   compress=False)
+                    initial_bridge_save_seconds=time.perf_counter()-initial_save_started
+                    prepared=(revision,(motion,local,visible,update_kind,scope,stats,started,composed_at,imported_at,duplicate_scan_seconds,initial_bridge_save_seconds,duplicate_report))
                 status("connecting" if initial else "sending",
                        "官方 Sync 正在處理模型／材質並連接 D5；首次請選原專案與材質繼承" if initial
                        else f"官方 D5 Sync 正在傳送第 {revision} 版", processing_revision=revision)
@@ -286,9 +330,13 @@ def main(directory):
                                       'sync_decision':latest.get('sync_decision',{}),
                                       'source_payload_bytes':latest.get('bytes')}
                 send_started=time.perf_counter()
-                receipt = adapter.send(initial=initial, lights=scope['d5_lights'],
-                                       light_ids=scope['d5_light_ids'])
-                sent_at = time.perf_counter()
+                if confirmed_send is not None and confirmed_send[0]==revision:
+                    _,receipt,sent_at,send_started=confirmed_send
+                    recorder.event('sdk_receipt_reused',revision=revision,reason='checkpoint_retry_only')
+                else:
+                    receipt = adapter.send(initial=initial, lights=scope['d5_lights'],light_ids=scope['d5_light_ids'],force_full=latest.get('sync_decision',{}).get('reason')=='requested_full_update')
+                    sent_at = time.perf_counter()
+                    confirmed_send=(revision,receipt,sent_at,send_started)
                 status('checkpointing','正在保存本輪同步識別',processing_revision=revision)
                 bpy.context.scene['bridge_has_receipt'] = True
                 # SDK-generated IDs exist only after send. Persist them now, not
@@ -310,22 +358,18 @@ def main(directory):
                 checkpoint_metadata={'plugin_version':VERSION,'blender_version':bpy.app.version_string,
                     'sdk_version':list(adapter.version),'revision':revision,'session_id':directory.name,
                     'layer_policy':scope.get('layer_policy',{})}
-                checkpoint(bpy,bridge_file,before_install=lambda pending_blend:
-                    prepare_checkpoint(project,confirmed_path,checkpoint_metadata,pending_blend))
-                recover_checkpoint(project)
+                checkpoint_prepared={}
+                def prepare_saved(pending_blend):
+                    checkpoint_prepared['state']=prepare_checkpoint(project,confirmed_path,checkpoint_metadata,pending_blend)
+                    checkpoint_prepared['stamp']=file_stamp(pending_blend)
+                with backups.guard:
+                    checkpoint(bpy,bridge_file,before_install=prepare_saved)
+                    finish_checkpoint(project,checkpoint_prepared['state'],checkpoint_prepared['stamp'])
                 previous_baseline = baseline
                 baseline = confirmed_path
-                backup_warning='';confirmed_restore_point=None
-                try:
-                    confirmed_restore_point=str(create_point(project,['confirmed']))
-                    recorder.event('bridge_confirmed_restore_point',revision=revision,path=confirmed_restore_point)
-                except (OSError,ValueError,KeyError,TypeError) as exc:
-                    # The SDK receipt and paired checkpoint are already valid.
-                    # Keep them truthful; before the NEXT send, create_point
-                    # must succeed, so storage failure cannot skip protection.
-                    backup_warning=str(exc)
-                    recorder.event('bridge_confirmed_backup_failed',revision=revision,error=backup_warning)
-                if not motion and not local and (config.get('fast_transforms') or config.get('partial_updates')):
+                backups.tick()
+                backup_warning=backups.error;confirmed_restore_point=None
+                if not motion and not local and not visible and (config.get('fast_transforms') or config.get('partial_updates')):
                     try:patch_cache.prime(baseline,confirmed_name[6:-4])
                     except Exception as exc:
                         patch_cache=PatchCache()
@@ -336,11 +380,6 @@ def main(directory):
                     if obsolete not in (baseline, previous_baseline):
                         try:obsolete.unlink()
                         except OSError:pass
-                try:
-                    removed=prune_points(project) if not backup_warning else []
-                    if removed:recorder.event('bridge_backup_pruned',paths=removed)
-                except (OSError,ValueError,KeyError,TypeError) as exc:
-                    recorder.event('bridge_backup_prune_deferred',error=str(exc))
                 checkpoint_seconds = time.perf_counter() - sent_at
                 initial = False
                 metrics = {"revision": revision, "import_seconds": imported_at - started,
@@ -353,6 +392,7 @@ def main(directory):
                            "material_optimization_backup": material_optimization_backup,
                            "bridge_confirmed_restore_point":confirmed_restore_point,
                            "bridge_backup_warning":backup_warning,
+                           "backup_in_progress":backups.pending or not backups.queue.empty(),
                            "restored_bridge": restored,
                            "bridge_file": str(bridge_file),
                            "export_seconds": latest.get("export_seconds"),
@@ -361,7 +401,8 @@ def main(directory):
                            "snapshot_validate_seconds": latest.get("snapshot_validate_seconds"),
                            "snapshot_to_send_seconds": time.time() - latest["published_at"],
                            "update_kind":update_kind,"sync_decision":latest.get('sync_decision',{}),
-                           "source_fast_path":bool(motion or local),"fast_transform_protocol":1 if (config.get('fast_transforms') or config.get('partial_updates')) else 0,
+                           "source_fast_path":bool(motion or local or visible),"fast_transform_protocol":1 if (config.get('fast_transforms') or config.get('partial_updates')) else 0,
+                           "visibility_protocol":1,
                            "partial_update_protocol":1 if config.get('partial_updates') else 0,
                            "model_sha256":confirmed_name[6:-4],
                            "fast_fallback_reason":latest.get('fast_fallback_reason',''),
@@ -381,9 +422,13 @@ def main(directory):
                                export_seconds=metrics.get('export_seconds'),send_seconds=metrics['send_seconds'],
                                snapshot_to_send_seconds=metrics['snapshot_to_send_seconds'])
                 last_metrics = metrics
-                ack = revision
-                status("sent", f"第 {revision} 版已由官方 Sync 成功傳送到 D5", **metrics)
+                ack = revision;prepared=None;confirmed_send=None
+                status("sent", (f"第 {revision} 版與既有顯示相同，已確認追蹤基準" if receipt.get("sync_mode")=="lights_or_unchanged" else f"第 {revision} 版已由官方 Sync 成功傳送到 D5"), **metrics)
                 last_heartbeat = time.monotonic()
+            except MaterialConflict as exc:
+                retry.failures=4;prepared=None
+                recorder.snapshot('material-conflicts.json',{'name':exc.material_name,'reason':exc.reason,'suggestion':exc.material_name+'－新版'})
+                status('material_conflict',str(exc),processing_revision=revision)
             except DeltaRejected as exc:
                 retry.failures=4
                 recorder.event('fast_update_rejected',revision=revision,error=str(exc))
@@ -396,6 +441,8 @@ def main(directory):
                 failed_performance.update(revision_confirmed=False,worker_error=str(exc),failed_phase=phase)
                 recorder.snapshot('performance-latest.json',failed_performance)
                 recorder.event('revision_failed',revision=revision,attempt=retry.failures+1,phase=phase,error=str(exc))
+                if phase in ('sending','connecting'):
+                    recovery_needed=True;recovery.reset()
                 retry.failed(time.monotonic())
                 status("retry_wait" if retry.failures >= 4 else "retrying",
                        ("本版傳送失敗，按「更新」重試：" if retry.failures >= 4
@@ -408,6 +455,7 @@ def main(directory):
         status("error", str(exc), failed_phase=phase)
         raise
     finally:
+        if backups:backups.close()
         if adapter:
             adapter.close()
         if lease:

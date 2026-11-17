@@ -30,7 +30,7 @@ class PerfRecorder:
         except Exception as exc:return self._failure(exc)
 
     def snapshot(self,name,data):
-        if name not in ('performance-latest.json','material-audit-latest.json','duplicate-models-latest.json','sync-decision-latest.json'):raise ValueError('Unknown diagnostic file')
+        if name not in ('performance-latest.json','material-audit-latest.json','duplicate-models-latest.json','sync-decision-latest.json','named-materials-latest.json','material-conflicts.json'):raise ValueError('Unknown diagnostic file')
         path=self.directory/name;pending=path.with_suffix('.pending')
         try:
             pending.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -46,7 +46,7 @@ def read_json_safe(path):
     except (OSError,ValueError):return {}
 
 
-REASONS={'first_full_sync':'本次連線首次完整同步','requested_full_update':'手動要求完整更新',
+REASONS={'certified_layer_visibility':'已確認只有圖層顯示變動，不重建模型','first_full_sync':'本次連線首次完整同步','requested_full_update':'手動要求完整更新',
          'command_history_overflow':'近期命令追蹤超過保留上限，需重新建立完整基準',
          'unsupported_history':'目前主程式命令介面無法安全追蹤','mesh_serial_unavailable':'網格缺少可追蹤的修改序號',
          'host_lights_require_full_update':'場景含橋接自建光源，使用完整同步','host_light_proxy_requires_full_update':'場景含光源代理，使用完整同步',
@@ -72,7 +72,7 @@ def decision_reason(decision):
     return REASONS.get(code,code or '等待判定')
 
 def decision_text(decision):
-    routes={'full':'完整同步','partial':'局部形狀／材質更新','transforms':'快速位置更新','skipped':'略過重複傳送'}
+    routes={'visibility':'圖層顯示更新','full':'完整同步','partial':'局部形狀／材質更新','transforms':'快速位置更新','skipped':'略過重複傳送'}
     rows=['本輪更新決策','提交版本：'+str(decision.get('revision','—')),
           '更新方式：'+routes.get(decision.get('route'),'等待判定'),'原因：'+decision_reason(decision)]
     if decision.get('receiver_reason'):rows.append('接收端原因：'+str(decision['receiver_reason']))
@@ -108,7 +108,7 @@ def performance_text(performance):
     def seconds(name):
         value=timing.get(name)
         return f'{value:.3f} 秒' if isinstance(value,(int,float)) else '未量測'
-    rows=['同步效能摘要','版本：0.9.10-test.6',
+    rows=['同步效能摘要','版本：0.9.11',
           '提交版本：'+str(performance.get('revision','—')),
           '本次嘗試：'+str(performance.get('attempt','—')),
           '類型：'+('本次背景程序首次傳送' if performance.get('initial_connection') else '後續更新'),
@@ -160,7 +160,7 @@ def export_bundle(directory,target,diagnostics):
     directory=Path(directory) if directory else None;target=Path(target)
     pending=target.with_name(target.name+'.pending');entries={};skipped=[]
     if directory:
-        for name in ('owner.json','preflight.json','status.json','startup-error.json','performance-latest.json',
+        for name in ('sdk-status.json','named-materials-latest.json','material-conflicts.json','owner.json','preflight.json','status.json','startup-error.json','performance-latest.json',
                      'material-audit-latest.json','duplicate-models-latest.json','sync-events.jsonl','sync-events.jsonl.1','sync-events.jsonl.2',
                      'source-events.jsonl','source-events.jsonl.1','source-events.jsonl.2','sync-decision-latest.json'):
             path=directory/name

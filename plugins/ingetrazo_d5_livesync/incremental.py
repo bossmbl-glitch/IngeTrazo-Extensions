@@ -30,8 +30,14 @@ class IncrementalImporter:
     def __init__(self):
         self.geometry_cache = {}
         self.meshes = {}
-        self.materials = {}
+        self.materials = {};self.signature_duplicates=set()
         self.images = {}
+        self.named_materials={};self.named_duplicates=set()
+        for material in bpy.data.materials:
+            target=material.get('bridge_named_target')
+            if target:
+                if target in self.named_materials:self.named_duplicates.add(target)
+                self.named_materials[target]=material
         self.persisted_images = {image.get('bridge_image_key'): image for image in bpy.data.images
                                  if image.get('bridge_image_key')}
         self.persisted_meshes = {}
@@ -46,6 +52,7 @@ class IncrementalImporter:
         for mat in bpy.data.materials:
             sig = mat.get('bridge_material_signature')
             if sig:
+                if sig in self.materials:self.signature_duplicates.add(sig)
                 self.materials[sig] = mat
 
     def load(self, context, path):
@@ -135,6 +142,14 @@ class CachedBuilder(Builder):
     def material(self, attrs):
         # Material identity excludes face vertices and UV placement. Those
         # remain in the mesh fingerprint, so UV edits still rebuild geometry.
+        named=attrs.get('_bridge_named_target')
+        if named and named in getattr(self.cache,'named_duplicates',set()):raise ValueError('同名材質有多個已保存識別，已停止以保護 D5 關聯')
+        existing=self.cache.named_materials.get(named) if named else None
+        if alive(existing) and existing.get('ingetrazo_doc')!=self.doc_path:raise ValueError('名稱材質不屬於目前橋接文件')
+        if alive(existing):
+            self.materials[('bridge_named',named)]=existing
+            if self.recording is not None:self.recording[existing.get('bridge_material_signature','named:'+named)]={k:attrs[k] for k in ('color','opacity','mat','texture','_bridge_named_target') if k in attrs}
+            return existing
         visual = {k: attrs[k] for k in ('color', 'opacity', 'mat') if k in attrs}
         tex = attrs.get('texture')
         if isinstance(tex, dict):
@@ -143,11 +158,15 @@ class CachedBuilder(Builder):
                       self.texture_signature(tex)))
         if self.recording is not None:
             self.recording[sig] = visual
+        if named and sig in getattr(self.cache,'signature_duplicates',set()):raise ValueError('舊材質外觀相同但有多個已保存身分，已停止以避免合併')
         mat = self.cache.materials.get(sig)
+        if named and alive(mat) and mat.get('ingetrazo_doc')!=self.doc_path:raise ValueError('舊名稱材質不屬於目前文件')
         if not alive(mat) or mat.get('bridge_material_signature') != sig:
             mat = super().material(attrs)
             mat['bridge_material_signature'] = sig
             self.cache.materials[sig] = mat
+        if named:
+            mat['bridge_named_target']=named;self.cache.named_materials[named]=mat
         self.materials[('bridge_cache', sig)] = mat
         return mat
 

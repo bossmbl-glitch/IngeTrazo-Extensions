@@ -63,3 +63,15 @@ class RetryGate:
     def failed(self, now):
         self.failures += 1
         self.retry_at = now + min(30.0, 2.0 ** self.failures)
+
+
+class RecoveryGate:
+    """A failed native send needs stable project readiness before reconnect."""
+    def __init__(self):self.ready_since=None;self.started=None
+    def reset(self):self.ready_since=None;self.started=None
+    def check(self,ready,now):
+        if self.started is None:self.started=now
+        if not ready:self.ready_since=None;return False
+        if self.ready_since is None:self.ready_since=now
+        return now-self.ready_since>=1.
+    def expired(self,now):return self.started is not None and now-self.started>=30.

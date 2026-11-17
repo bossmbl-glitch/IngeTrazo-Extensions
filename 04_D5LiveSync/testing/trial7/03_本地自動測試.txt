@@ -1,0 +1,200 @@
+test_baked_move_uv_and_undo_redo (test_0910.LiveSyncTests.test_baked_move_uv_and_undo_redo) ... ok
+test_baked_rotation_nested_scope (test_0910.LiveSyncTests.test_baked_rotation_nested_scope) ... ok
+test_component_metadata_falls_back (test_0910.LiveSyncTests.test_component_metadata_falls_back) ... ok
+test_external_edit_falls_back (test_0910.LiveSyncTests.test_external_edit_falls_back) ... ok
+test_history_overflow_falls_back (test_0910.LiveSyncTests.test_history_overflow_falls_back) ... ok
+test_instance_fast_path (test_0910.LiveSyncTests.test_instance_fast_path) ... ok
+test_loose_paint_falls_back (test_0910.LiveSyncTests.test_loose_paint_falls_back) ... ok
+test_manual_full_bypasses_skip (test_0910.LiveSyncTests.test_manual_full_bypasses_skip) ... ok
+test_missing_texture_never_skips (test_0910.LiveSyncTests.test_missing_texture_never_skips) ... ok
+test_native_partial_export_and_hold_composition (test_0910.LiveSyncTests.test_native_partial_export_and_hold_composition) ... ok
+test_nested_paint_clone_undo_redo (test_0910.LiveSyncTests.test_nested_paint_clone_undo_redo) ... ok
+test_noop_metadata_and_history_changes_never_skip (test_0910.LiveSyncTests.test_noop_metadata_and_history_changes_never_skip) ... ok
+test_noop_no_export_no_revision (test_0910.LiveSyncTests.test_noop_no_export_no_revision) ... ok
+test_noop_with_both_update_options_disabled (test_0910.LiveSyncTests.test_noop_with_both_update_options_disabled) ... ok
+test_paint_partial_keeps_uid_and_hold (test_0910.LiveSyncTests.test_paint_partial_keeps_uid_and_hold) ... ok
+test_paint_source_mismatch_falls_back (test_0910.LiveSyncTests.test_paint_source_mismatch_falls_back) ... ok
+test_pending_never_skips (test_0910.LiveSyncTests.test_pending_never_skips) ... ok
+test_receiver_error_never_skips (test_0910.LiveSyncTests.test_receiver_error_never_skips) ... ok
+test_shared_back_material_falls_back (test_0910.LiveSyncTests.test_shared_back_material_falls_back) ... ok
+test_swallowed_native_failure_invalidates_local_certificate (test_0910.LiveSyncTests.test_swallowed_native_failure_invalidates_local_certificate) ... ok
+test_texture_change_never_skips (test_0910.LiveSyncTests.test_texture_change_never_skips) ... ok
+test_unknown_command_falls_back (test_0910.LiveSyncTests.test_unknown_command_falls_back) ... ok
+test_preview_between_clicks_blocks_even_without_mouse_button (test_0910_trial2.GuardTests.test_preview_between_clicks_blocks_even_without_mouse_button) ... ok
+test_probe_unknown_and_busy_renderer_never_stop (test_0910_trial2.GuardTests.test_probe_unknown_and_busy_renderer_never_stop) ... ok
+test_stopped_ui_wins_over_stale_sending_receipt (test_0910_trial2.GuardTests.test_stopped_ui_wins_over_stale_sending_receipt) ... ok
+test_watch_waits_for_observed_renderer_then_closes (test_0910_trial2.GuardTests.test_watch_waits_for_observed_renderer_then_closes) ... ok
+test_d5_close_stops_panel_without_acknowledging_pending (test_0910_trial2.PanelTests.test_d5_close_stops_panel_without_acknowledging_pending) ... ok
+test_panel_defers_manual_export_until_preview_commits (test_0910_trial2.PanelTests.test_panel_defers_manual_export_until_preview_commits) ... ok
+test_camera_navigation_no_export (test_0910_trial2.Trial2Tests.test_camera_navigation_no_export) ... ok
+test_dependency_failure_is_explained (test_0910_trial2.Trial2Tests.test_dependency_failure_is_explained) ... ok
+test_edit_face_paint_then_exit_undo_redo (test_0910_trial2.Trial2Tests.test_edit_face_paint_then_exit_undo_redo) ... ok
+test_edit_paint_serialized_patch_preserves_hold_and_uids (test_0910_trial2.Trial2Tests.test_edit_paint_serialized_patch_preserves_hold_and_uids) ... ok
+test_empty_partial_no_export_and_rebase_survives_ack (test_0910_trial2.Trial2Tests.test_empty_partial_no_export_and_rebase_survives_ack) ... ok
+test_instance_edit_paint_share_undo_redo (test_0910_trial2.Trial2Tests.test_instance_edit_paint_share_undo_redo) ... ok
+test_manual_full_never_uses_empty_skip (test_0910_trial2.Trial2Tests.test_manual_full_never_uses_empty_skip) ... ok
+test_real_geometry_still_not_skipped (test_0910_trial2.Trial2Tests.test_real_geometry_still_not_skipped) ... ok
+test_saved_view_remains_a_real_global_change (test_0910_trial2.Trial2Tests.test_saved_view_remains_a_real_global_change) ... ok
+test_failed_native_send_disconnects_before_retry (test_0911_trial7.AdapterVisibilityTests.test_failed_native_send_disconnects_before_retry) ... ok
+test_fresh_converter_never_suppresses_material_definitions (test_0911_trial7.AdapterVisibilityTests.test_fresh_converter_never_suppresses_material_definitions) ... ok
+test_visibility_same_session_sends_no_material_or_geometry_rebuild (test_0911_trial7.AdapterVisibilityTests.test_visibility_same_session_sends_no_material_or_geometry_rebuild) ... ok
+test_background_verification_does_not_block_submission_or_use_new_pair (test_0911_trial7.AsyncBackupTests.test_background_verification_does_not_block_submission_or_use_new_pair) ... ok
+test_delete_cannot_target_live_bridge_or_traversal (test_0911_trial7.AsyncBackupTests.test_delete_cannot_target_live_bridge_or_traversal) ... ok
+test_delete_interruption_resumes_only_confirmed_tombstone (test_0911_trial7.AsyncBackupTests.test_delete_interruption_resumes_only_confirmed_tombstone) ... ok
+test_deleting_one_shared_point_cannot_damage_other_or_live_pair (test_0911_trial7.AsyncBackupTests.test_deleting_one_shared_point_cannot_damage_other_or_live_pair) ... ok
+test_every_half_hour_survives_rotation_and_shares_storage (test_0911_trial7.AsyncBackupTests.test_every_half_hour_survives_rotation_and_shares_storage) ... ok
+test_export_finishes_pending_protected_jobs_before_moving (test_0911_trial7.AsyncBackupTests.test_export_finishes_pending_protected_jobs_before_moving) ... ok
+test_failed_job_preserved_and_replayed_after_restart (test_0911_trial7.AsyncBackupTests.test_failed_job_preserved_and_replayed_after_restart) ... ok
+test_half_hour_capture_is_queued_even_while_previous_copy_is_busy (test_0911_trial7.AsyncBackupTests.test_half_hour_capture_is_queued_even_while_previous_copy_is_busy) ... ok
+test_half_hour_protection_is_pinned_for_old_version_retention (test_0911_trial7.AsyncBackupTests.test_half_hour_protection_is_pinned_for_old_version_retention) ... ok
+test_immutable_capture_survives_next_checkpoint_replace (test_0911_trial7.AsyncBackupTests.test_immutable_capture_survives_next_checkpoint_replace) ... ok
+test_minute_settings_and_half_hour_override (test_0911_trial7.AsyncBackupTests.test_minute_settings_and_half_hour_override) ... ok
+test_prepared_checkpoint_avoids_rehashing_same_inode (test_0911_trial7.AsyncBackupTests.test_prepared_checkpoint_avoids_rehashing_same_inode) ... ok
+test_protected_delete_requires_explicit_opt_in_and_worker_lock (test_0911_trial7.AsyncBackupTests.test_protected_delete_requires_explicit_opt_in_and_worker_lock) ... ok
+test_restart_does_not_capture_same_slot_twice_while_replaying (test_0911_trial7.AsyncBackupTests.test_restart_does_not_capture_same_slot_twice_while_replaying) ... ok
+test_unpublished_capture_is_not_replayed_or_retried (test_0911_trial7.AsyncBackupTests.test_unpublished_capture_is_not_replayed_or_retried) ... ok
+test_manual_backup_runs_without_blocking_qt_events (test_0911_trial7.BackupUiNewTests.test_manual_backup_runs_without_blocking_qt_events) ... ok
+test_minute_controls_and_date_range_delete_require_stopped (test_0911_trial7.BackupUiNewTests.test_minute_controls_and_date_range_delete_require_stopped) ... ok
+test_minute_setting_is_persisted_without_starting_sync (test_0911_trial7.BackupUiNewTests.test_minute_setting_is_persisted_without_starting_sync) ... ok
+test_existing_named_blender_material_is_not_repainted_or_recreated (test_0911_trial7.NamedDatablockTests.test_existing_named_blender_material_is_not_repainted_or_recreated) ... ok
+test_bad_name_ledger_refuses_upgrade (test_0911_trial7.StableNameTests.test_bad_name_ledger_refuses_upgrade) ... ok
+test_color_and_definition_change_preserve_named_identity_and_old_visual (test_0911_trial7.StableNameTests.test_color_and_definition_change_preserve_named_identity_and_old_visual) ... ok
+test_exclude_restore_keeps_dormant_name_targets (test_0911_trial7.StableNameTests.test_exclude_restore_keeps_dormant_name_targets) ... ok
+test_hold_and_live_named_material_share_confirmed_appearance (test_0911_trial7.StableNameTests.test_hold_and_live_named_material_share_confirmed_appearance) ... ok
+test_legacy_upgrade_with_simultaneous_paint_cannot_merge_scoped_branch (test_0911_trial7.StableNameTests.test_legacy_upgrade_with_simultaneous_paint_cannot_merge_scoped_branch) ... ok
+test_old_raw_and_scoped_bindings_not_merged_by_new_name (test_0911_trial7.StableNameTests.test_old_raw_and_scoped_bindings_not_merged_by_new_name) ... ok
+test_rename_explicitly_creates_new_identity_keeps_old_registry (test_0911_trial7.StableNameTests.test_rename_explicitly_creates_new_identity_keeps_old_registry) ... ok
+test_texture_replacement_keeps_old_bytes_and_current_uv (test_0911_trial7.StableNameTests.test_texture_replacement_keeps_old_bytes_and_current_uv) ... ok
+test_material_or_geometry_change_rejects_visibility_certificate (test_0911_trial7.VisibilityDeltaTests.test_material_or_geometry_change_rejects_visibility_certificate) ... ok
+test_real_host_layer_toggle_bypasses_full_export (test_0911_trial7.VisibilityDeltaTests.test_real_host_layer_toggle_bypasses_full_export) ... ok
+test_recovery_requires_stable_ready_and_times_out_without_mutating_revision (test_0911_trial7.VisibilityDeltaTests.test_recovery_requires_stable_ready_and_times_out_without_mutating_revision) ... ok
+test_window_fallback_excludes_browser_title_and_other_unreal_apps (test_0911_trial7.VisibilityDeltaTests.test_window_fallback_excludes_browser_title_and_other_unreal_apps) ... ok
+test_wrong_base_visibility_refused (test_0911_trial7.VisibilityDeltaTests.test_wrong_base_visibility_refused) ... ok
+test_checkpoint_retry_never_resends_successful_sdk_payload (test_0911_trial7.WorkerIntegrationTests.test_checkpoint_retry_never_resends_successful_sdk_payload) ... BRIDGE_STATUS {"phase": "starting", "message": "背景 Blender 正在載入官方 D5 LiveSync", "updated_at": 1794830166.214532, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false}
+BRIDGE_STATUS {"phase": "composing", "message": "正在合併第 1 版圖層與材質", "updated_at": 1794830166.2178302, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "importing", "message": "Blender 正在匯入第 1 版模型", "updated_at": 1794830166.2200239, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "connecting", "message": "官方 Sync 正在處理模型／材質並連接 D5；首次請選原專案與材質繼承", "updated_at": 1794830166.2217615, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "checkpointing", "message": "正在保存本輪同步識別", "updated_at": 1794830166.2229023, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+Traceback (most recent call last):
+  File "/workspace/IngeTrazo-Extensions/plugins/ingetrazo_d5_livesync/worker.py", line 367, in main
+    finish_checkpoint(project,checkpoint_prepared['state'],checkpoint_prepared['stamp'])
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1204, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/IngeTrazo-Extensions/tests/livesync/test_0911_trial7.py", line 374, in finish
+    if fail_checkpoint and len(calls)==1:raise OSError('marker write interrupted')
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: marker write interrupted
+BRIDGE_STATUS {"phase": "retrying", "message": "本版傳送失敗，稍後自動重試：marker write interrupted", "updated_at": 1794830166.2272875, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1, "retry_failures": 1}
+BRIDGE_STATUS {"phase": "connecting", "message": "官方 Sync 正在處理模型／材質並連接 D5；首次請選原專案與材質繼承", "updated_at": 1794830166.2402334, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": true, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "checkpointing", "message": "正在保存本輪同步識別", "updated_at": 1794830166.2410536, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": true, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "sent", "message": "第 1 版已由官方 Sync 成功傳送到 D5", "updated_at": 1794830166.2477982, "worker_pid": 12039, "acknowledged_revision": 1, "scope_baseline_ready": true, "revision": 1, "import_seconds": 0.0037009469997428823, "scope_compose_seconds": 0.002172173000872135, "blender_import_seconds": 0.0015287739988707472, "send_seconds": 2.8593000024557114e-05, "duplicate_scan_seconds": 0.00011945000005653128, "initial_bridge_save_seconds": 6.791200212319382e-05, "checkpoint_seconds": 0.024414978001004783, "material_optimization_backup": null, "bridge_confirmed_restore_point": null, "bridge_backup_warning": "", "backup_in_progress": true, "restored_bridge": false, "bridge_file": "/tmp/tmpl5th510a/projects/cccccccccccccccccccccccccccccccc/bridge.blend", "export_seconds": null, "snapshot_filter_seconds": null, "snapshot_serialize_seconds": null, "snapshot_validate_seconds": null, "snapshot_to_send_seconds": 0.03832697868347168, "update_kind": "full", "sync_decision": {}, "source_fast_path": false, "fast_transform_protocol": 0, "visibility_protocol": 1, "partial_update_protocol": 0, "model_sha256": "4e0a0f1d785f041c3a6089f26cf9f9772789f888ab58ef981b6db63a0be6849b", "fast_fallback_reason": "", "d5_busy_wait_seconds": 0.0, "stats": {"objects": 1, "faces": 1, "meshes_built": 0}, "layer_scope": {"held_root_groups": 0, "normal_root_groups": 1, "omitted_root_groups": 0, "loose_mode": "normal", "layer_policy": {}, "isolated_materials": 0, "logical_materials": 0, "legacy_names_preserved": 0, "named_material_changes": [], "named_material_migrated": false, "visibility_protocol": 1, "visibility_migrated": false, "material_identity_version": 1, "material_identity_migrated": false, "material_policy_changed": false, "material_binding_scopes": 1, "compact_legacy_materials": false, "legacy_aliases_collapsed": 0}, "official_return_code": 0, "sync_mode": "full"}
+BRIDGE_STATUS {"phase": "stopped", "message": "背景同步已停止；D5 場景保留", "updated_at": 1794830166.2493575, "worker_pid": 12039, "acknowledged_revision": 1, "scope_baseline_ready": true}
+ok
+test_sdk_retry_reuses_prepared_model_and_resets_only_after_ready (test_0911_trial7.WorkerIntegrationTests.test_sdk_retry_reuses_prepared_model_and_resets_only_after_ready) ... BRIDGE_STATUS {"phase": "starting", "message": "背景 Blender 正在載入官方 D5 LiveSync", "updated_at": 1794830166.362002, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false}
+BRIDGE_STATUS {"phase": "composing", "message": "正在合併第 1 版圖層與材質", "updated_at": 1794830166.3662486, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "importing", "message": "Blender 正在匯入第 1 版模型", "updated_at": 1794830166.3694804, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "connecting", "message": "官方 Sync 正在處理模型／材質並連接 D5；首次請選原專案與材質繼承", "updated_at": 1794830166.3721118, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+Traceback (most recent call last):
+  File "/workspace/IngeTrazo-Extensions/plugins/ingetrazo_d5_livesync/worker.py", line 337, in main
+    receipt = adapter.send(initial=initial, lights=scope['d5_lights'],light_ids=scope['d5_light_ids'],force_full=latest.get('sync_decision',{}).get('reason')=='requested_full_update')
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1202, in _execute_mock_call
+    raise result
+RuntimeError: code 4
+BRIDGE_STATUS {"phase": "retrying", "message": "本版傳送失敗，稍後自動重試：code 4", "updated_at": 1794830166.3751411, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1, "retry_failures": 1}
+BRIDGE_STATUS {"phase": "waiting_d5", "message": "同步失敗後等待 D5 專案穩定就緒；不重建模型", "updated_at": 1794830166.3785472, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "connecting", "message": "官方 Sync 正在處理模型／材質並連接 D5；首次請選原專案與材質繼承", "updated_at": 1794830166.3813202, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "checkpointing", "message": "正在保存本輪同步識別", "updated_at": 1794830166.3821886, "worker_pid": 12039, "acknowledged_revision": 0, "scope_baseline_ready": false, "processing_revision": 1}
+BRIDGE_STATUS {"phase": "sent", "message": "第 1 版已由官方 Sync 成功傳送到 D5", "updated_at": 1794830166.3902504, "worker_pid": 12039, "acknowledged_revision": 1, "scope_baseline_ready": true, "revision": 1, "import_seconds": 0.005546527001570212, "scope_compose_seconds": 0.0032306880020769313, "blender_import_seconds": 0.0023158389994932804, "send_seconds": 2.730100095504895e-05, "duplicate_scan_seconds": 0.00014503800048260018, "initial_bridge_save_seconds": 0.00012533900007838383, "checkpoint_seconds": 0.007455784998455783, "material_optimization_backup": null, "bridge_confirmed_restore_point": null, "bridge_backup_warning": "", "backup_in_progress": true, "restored_bridge": false, "bridge_file": "/tmp/tmpblp8deve/projects/cccccccccccccccccccccccccccccccc/bridge.blend", "export_seconds": null, "snapshot_filter_seconds": null, "snapshot_serialize_seconds": null, "snapshot_validate_seconds": null, "snapshot_to_send_seconds": 0.034249067306518555, "update_kind": "full", "sync_decision": {}, "source_fast_path": false, "fast_transform_protocol": 0, "visibility_protocol": 1, "partial_update_protocol": 0, "model_sha256": "4e0a0f1d785f041c3a6089f26cf9f9772789f888ab58ef981b6db63a0be6849b", "fast_fallback_reason": "", "d5_busy_wait_seconds": 0.0, "stats": {"objects": 1, "faces": 1, "meshes_built": 0}, "layer_scope": {"held_root_groups": 0, "normal_root_groups": 1, "omitted_root_groups": 0, "loose_mode": "normal", "layer_policy": {}, "isolated_materials": 0, "logical_materials": 0, "legacy_names_preserved": 0, "named_material_changes": [], "named_material_migrated": false, "visibility_protocol": 1, "visibility_migrated": false, "material_identity_version": 1, "material_identity_migrated": false, "material_policy_changed": false, "material_binding_scopes": 1, "compact_legacy_materials": false, "legacy_aliases_collapsed": 0}, "official_return_code": 0, "sync_mode": "full"}
+BRIDGE_STATUS {"phase": "stopped", "message": "背景同步已停止；D5 場景保留", "updated_at": 1794830166.3917906, "worker_pid": 12039, "acknowledged_revision": 1, "scope_baseline_ready": true}
+ok
+test_bad_pending_checkpoint_cannot_overwrite_old_pair (test_bridge_backups.BackupTests.test_bad_pending_checkpoint_cannot_overwrite_old_pair) ... ok
+test_bootstrap_never_overwrites_mismatched_existing_marker (test_bridge_backups.BackupTests.test_bootstrap_never_overwrites_mismatched_existing_marker) ... ok
+test_broken_current_pair_never_gets_blessed (test_bridge_backups.BackupTests.test_broken_current_pair_never_gets_blessed) ... ok
+test_checkpoint_recovers_marker_after_bridge_already_replaced (test_bridge_backups.BackupTests.test_checkpoint_recovers_marker_after_bridge_already_replaced) ... ok
+test_checkpoint_recovery_finishes_verified_pending_pair (test_bridge_backups.BackupTests.test_checkpoint_recovery_finishes_verified_pending_pair) ... ok
+test_complete_point_contains_verified_pair_and_no_d5 (test_bridge_backups.BackupTests.test_complete_point_contains_verified_pair_and_no_d5) ... ok
+test_copy_hash_failure_is_reported_as_backup_io_error (test_bridge_backups.BackupTests.test_copy_hash_failure_is_reported_as_backup_io_error) ... ok
+test_corrupt_archive_rejected_before_live_changes (test_bridge_backups.BackupTests.test_corrupt_archive_rejected_before_live_changes) ... ok
+test_corrupt_same_state_point_does_not_block_new_verified_backup (test_bridge_backups.BackupTests.test_corrupt_same_state_point_does_not_block_new_verified_backup) ... ok
+test_interrupted_restore_is_rolled_back_before_next_start (test_bridge_backups.BackupTests.test_interrupted_restore_is_rolled_back_before_next_start) ... ok
+test_manifest_path_traversal_is_rejected (test_bridge_backups.BackupTests.test_manifest_path_traversal_is_rejected) ... ok
+test_non_object_manifest_is_listed_invalid_without_deletion (test_bridge_backups.BackupTests.test_non_object_manifest_is_listed_invalid_without_deletion) ... ok
+test_other_project_cannot_restore_this_point (test_bridge_backups.BackupTests.test_other_project_cannot_restore_this_point) ... ok
+test_prepare_callback_fails_before_checkpoint_replaces_original (test_bridge_backups.BackupTests.test_prepare_callback_fails_before_checkpoint_replaces_original) ... ok
+test_restore_can_replace_broken_current_bridge_but_keeps_evidence (test_bridge_backups.BackupTests.test_restore_can_replace_broken_current_bridge_but_keeps_evidence) ... ok
+test_restore_failure_rolls_back_every_replaced_file (test_bridge_backups.BackupTests.test_restore_failure_rolls_back_every_replaced_file) ... ok
+test_restore_pair_after_live_scope_was_pruned (test_bridge_backups.BackupTests.test_restore_pair_after_live_scope_was_pruned) ... ok
+test_retention_does_not_remove_corrupt_or_unknown_backups (test_bridge_backups.BackupTests.test_retention_does_not_remove_corrupt_or_unknown_backups) ... ok
+test_retention_keeps_ten_recent_seven_daily_and_pins (test_bridge_backups.BackupTests.test_retention_keeps_ten_recent_seven_daily_and_pins) ... ok
+test_retries_reuse_point_and_add_risk_pin (test_bridge_backups.BackupTests.test_retries_reuse_point_and_add_risk_pin) ... ok
+test_running_worker_lease_blocks_restore_manual_and_pin (test_bridge_backups.BackupTests.test_running_worker_lease_blocks_restore_manual_and_pin) ... ok
+test_source_changes_during_copy_never_replace_old_backup (test_bridge_backups.BackupTests.test_source_changes_during_copy_never_replace_old_backup) ... ok
+test_state_install_failure_rolls_back_already_replaced_blend (test_bridge_backups.BackupTests.test_state_install_failure_rolls_back_already_replaced_blend) ... ok
+test_status_keeps_backup_failure_visible_after_successful_receipt (test_bridge_backups.BackupTests.test_status_keeps_backup_failure_visible_after_successful_receipt) ... ok
+test_unpin_makes_old_point_eligible_for_rotation (test_bridge_backups.BackupTests.test_unpin_makes_old_point_eligible_for_rotation) ... ok
+test_ui_blocks_restore_and_manual_while_sync_running (test_bridge_backups.BackupUiTests.test_ui_blocks_restore_and_manual_while_sync_running) ... ok
+test_ui_restore_updates_stop_status_without_starting_sync (test_bridge_backups.BackupUiTests.test_ui_restore_updates_stop_status_without_starting_sync) ... ok
+test_damaged_frozen_display_stops_before_output (test_hold_visibility.HoldCompositionTests.test_damaged_frozen_display_stops_before_output) ... ok
+test_held_deleted_root_and_child_visibility_are_preserved (test_hold_visibility.HoldCompositionTests.test_held_deleted_root_and_child_visibility_are_preserved) ... ok
+test_hide_held_layer_keeps_display_geometry_and_material_names (test_hold_visibility.HoldCompositionTests.test_hide_held_layer_keeps_display_geometry_and_material_names) ... ok
+test_hold_cannot_run_opt_in_material_compaction (test_hold_visibility.HoldCompositionTests.test_hold_cannot_run_opt_in_material_compaction) ... ok
+test_hold_hide_release_keeps_legacy_scoped_material_bindings (test_hold_visibility.HoldCompositionTests.test_hold_hide_release_keeps_legacy_scoped_material_bindings) ... ok
+test_legacy_baseline_uses_last_layer_display_without_renaming (test_hold_visibility.HoldCompositionTests.test_legacy_baseline_uses_last_layer_display_without_renaming) ... ok
+test_mixed_shared_child_tag_freezes_only_held_tree_without_new_aliases (test_hold_visibility.HoldCompositionTests.test_mixed_shared_child_tag_freezes_only_held_tree_without_new_aliases) ... ok
+test_native_default_layer_omission_preserves_groups_and_loose (test_hold_visibility.HoldCompositionTests.test_native_default_layer_omission_preserves_groups_and_loose) ... ok
+test_partial_live_edit_preserves_frozen_display_and_material_ledger (test_hold_visibility.HoldCompositionTests.test_partial_live_edit_preserves_frozen_display_and_material_ledger) ... ok
+test_previously_hidden_held_content_stays_hidden_when_source_shown (test_hold_visibility.HoldCompositionTests.test_previously_hidden_held_content_stays_hidden_when_source_shown) ... ok
+test_frozen_loose_object_stays_visible_without_material_changes (test_hold_visibility.VisibilityApplicationTests.test_frozen_loose_object_stays_visible_without_material_changes) ... ok
+test_missing_or_duplicate_object_refuses_before_any_display_mutation (test_hold_visibility.VisibilityApplicationTests.test_missing_or_duplicate_object_refuses_before_any_display_mutation) ... ok
+test_normal_hidden_parent_also_hides_descendant_on_different_tag (test_hold_visibility.VisibilityApplicationTests.test_normal_hidden_parent_also_hides_descendant_on_different_tag) ... ok
+test_shared_collection_no_longer_hides_held_object_or_changes_identity (test_hold_visibility.VisibilityApplicationTests.test_shared_collection_no_longer_hides_held_object_or_changes_identity) ... ok
+test_ambiguous_or_damaged_binding_stops_without_output (test_material_identity.CompositionTests.test_ambiguous_or_damaged_binding_stops_without_output) ... ok
+test_back_material_reference_survives_exclude_restore (test_material_identity.CompositionTests.test_back_material_reference_survives_exclude_restore) ... ok
+test_excluding_all_keeps_dormant_bindings_and_registry (test_material_identity.CompositionTests.test_excluding_all_keeps_dormant_bindings_and_registry) ... ok
+test_legacy_raw_and_scoped_same_appearance_keep_distinct_ids (test_material_identity.CompositionTests.test_legacy_raw_and_scoped_same_appearance_keep_distinct_ids) ... ok
+test_migration_and_policy_metrics (test_material_identity.CompositionTests.test_migration_and_policy_metrics) ... ok
+test_multiple_legacy_uv_aliases_are_preserved_without_merging (test_material_identity.CompositionTests.test_multiple_legacy_uv_aliases_are_preserved_without_merging) ... ok
+test_normal_hold_exclude_restore_never_renames_other_layer (test_material_identity.CompositionTests.test_normal_hold_exclude_restore_never_renames_other_layer) ... ok
+test_partial_after_restore_uses_same_binding_and_keeps_other_root (test_material_identity.CompositionTests.test_partial_after_restore_uses_same_binding_and_keeps_other_root) ... ok
+test_real_paint_change_does_not_repaint_held_definition (test_material_identity.CompositionTests.test_real_paint_change_does_not_repaint_held_definition) ... ok
+test_shared_prototype_can_keep_different_existing_material_ids (test_material_identity.CompositionTests.test_shared_prototype_can_keep_different_existing_material_ids) ... ok
+test_unknown_legacy_alias_is_rejected_instead_of_renamed (test_material_identity.CompositionTests.test_unknown_legacy_alias_is_rejected_instead_of_renamed) ... ok
+test_uv_and_embedded_texture_survive_policy_changes (test_material_identity.CompositionTests.test_uv_and_embedded_texture_survive_policy_changes) ... ok
+test_backup_copies_exact_bridge_and_baseline (test_material_identity.DatablockAndBackupTests.test_backup_copies_exact_bridge_and_baseline) ... ok
+test_orphaned_owned_material_keeps_sdk_properties_and_fake_user (test_material_identity.DatablockAndBackupTests.test_orphaned_owned_material_keeps_sdk_properties_and_fake_user) ... ok
+test_corrupt_backup_and_current_pair_cannot_be_exported (test_project_transfer.TransferTests.test_corrupt_backup_and_current_pair_cannot_be_exported) ... ok
+test_existing_target_pair_and_history_preserved_before_import (test_project_transfer.TransferTests.test_existing_target_pair_and_history_preserved_before_import) ... ok
+test_export_cannot_write_into_project (test_project_transfer.TransferTests.test_export_cannot_write_into_project) ... ok
+test_failed_export_preserves_existing_archive (test_project_transfer.TransferTests.test_failed_export_preserves_existing_archive) ... ok
+test_import_failure_rolls_back_live_pair (test_project_transfer.TransferTests.test_import_failure_rolls_back_live_pair) ... ok
+test_mismatched_igz_identity_refused_before_creating_target (test_project_transfer.TransferTests.test_mismatched_igz_identity_refused_before_creating_target) ... ok
+test_outer_hash_change_does_not_hide_inner_corruption (test_project_transfer.TransferTests.test_outer_hash_change_does_not_hide_inner_corruption) ... ok
+test_ownership_rebind_changes_only_known_tags_and_keeps_sdk_ids (test_project_transfer.TransferTests.test_ownership_rebind_changes_only_known_tags_and_keeps_sdk_ids) ... ok
+test_path_traversal_extra_files_and_duplicate_entries_rejected (test_project_transfer.TransferTests.test_path_traversal_extra_files_and_duplicate_entries_rejected) ... ok
+test_roundtrip_new_user_keeps_blend_bytes_and_rebases_all_backups (test_project_transfer.TransferTests.test_roundtrip_new_user_keeps_blend_bytes_and_rebases_all_backups) ... ok
+test_running_source_and_target_leases_block_transfer (test_project_transfer.TransferTests.test_running_source_and_target_leases_block_transfer) ... ok
+test_second_export_and_import_preserve_original_owner_and_restore_history (test_project_transfer.TransferTests.test_second_export_and_import_preserve_original_owner_and_restore_history) ... ok
+test_tampered_archive_refused_before_live_changes (test_project_transfer.TransferTests.test_tampered_archive_refused_before_live_changes) ... ok
+test_unknown_owner_aborts_before_any_tag_changes (test_project_transfer.TransferTests.test_unknown_owner_aborts_before_any_tag_changes) ... ok
+test_windows_origin_and_second_migration_keep_actual_blend_owner (test_project_transfer.TransferTests.test_windows_origin_and_second_migration_keep_actual_blend_owner) ... ok
+test_import_available_without_local_bridge_and_disabled_when_running (test_project_transfer.TransferUiTests.test_import_available_without_local_bridge_and_disabled_when_running) ... ok
+test_successful_import_stays_stopped_and_does_not_change_scene_identity (test_project_transfer.TransferUiTests.test_successful_import_stays_stopped_and_does_not_change_scene_identity) ... ok
+
+----------------------------------------------------------------------
+Ran 146 tests in 4.265s
+
+OK

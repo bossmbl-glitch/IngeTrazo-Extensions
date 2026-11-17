@@ -25,7 +25,7 @@ class SyncStatusDialog(QDialog):
         self.elapsed=QLabel('已用時間　00:00');self.revision=QLabel('目前版本　—');layout.addWidget(self.elapsed);layout.addWidget(self.revision)
         self.note=QLabel();self.note.setWordWrap(True);self.note.setTextFormat(Qt.TextFormat.PlainText);self.note.setMinimumHeight(38);layout.addWidget(self.note)
         row=QHBoxLayout();layout.addLayout(row)
-        self.records=QPushButton('查看詳細紀錄');self.records.clicked.connect(panel.open_folder);row.addWidget(self.records)
+        self.records=QPushButton('匯出診斷包');self.records.clicked.connect(panel.export_performance_bundle);row.addWidget(self.records)
         self.pause=QPushButton('暫停後續更新');self.pause.clicked.connect(lambda:panel.set_paused(not panel.schedule.paused));row.addWidget(self.pause)
         self.footer=QLabel('關閉此視窗不會停止同步；暫停不會中斷已提交的本輪。');self.footer.setWordWrap(True);self.footer.setStyleSheet('color:#65717d; font-size:11px');layout.addWidget(self.footer)
 

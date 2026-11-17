@@ -90,6 +90,9 @@ def export_project(project,destination):
     temp=None
     try:
         b.recover_restore(project);b.recover_checkpoint(project)
+        try:from .backup_service import finalize_jobs
+        except ImportError:from backup_service import finalize_jobs
+        finalize_jobs(project)
         current=b.create_point(project,['transfer_export'],pinned=True)
         rows=b.list_points(project,verify=True)
         if any(not r['valid'] for r in rows):raise ValueError('有損壞的還原點，請先保留診斷並處理，尚未匯出')

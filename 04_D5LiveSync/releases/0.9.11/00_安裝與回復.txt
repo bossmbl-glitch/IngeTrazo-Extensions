@@ -1,0 +1,20 @@
+IngeTrazo D5 LiveSync 0.9.11 正式版｜Windows／IngeTrazo 0.6.0
+
+安裝
+1. 停止同步、儲存 IGZ，關閉 IngeTrazo。
+2. 複製完整 %LOCALAPPDATA%\IngeTrazoD5Bridge\projects 到安全位置；另存 IGZ 與 D5 副本。
+3. 舊外掛備份到 plugins 以外。將 ZIP 內 ingetrazo_d5_livesync 放入 %APPDATA%\IngeTrazo\plugins\，取代同名資料夾。
+4. 重開後匯出診斷，bridge 應為 0.9.11。備份列表顯示的是建立備份時的歷史版本。
+5. 先以 D5 副本核對模型、材質與 UV；不要同時讓兩台電腦同步同一份伺服器 D5 專案。
+
+操作
+日常：暫停／繼續／重新整理。首次連線可按工具列 D5，或展開進階按啟動連線。
+一般定時點保留最新六份，半小時／手動保護點另計，所以列表總數可以超過六份。
+同名來源材質預設保留原外觀，需新呈現請另建名稱；UV 可更新。不自動合併舊分支。
+備份及還原只處理橋接 BLEND 與配對快照，不會倒退 IGZ／D5，也不能重建先前已遺失的 SDK 識別。
+移機使用匯出／匯入移機包；不包含伺服器 D5 專案與資產。
+
+回復
+停止同步並關閉 IngeTrazo，先另存目前完整 projects，再依需求回復原外掛及同時期 projects／IGZ／D5 副本。
+不要單獨混用某一份 bridge.blend；一般輪替已刪除的歷史點不能靠降版找回。
+舊正式版 0.9.10 及其標籤仍保留。

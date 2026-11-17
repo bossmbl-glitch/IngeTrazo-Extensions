@@ -4,7 +4,7 @@ PHASES={'starting':'背景 Blender 正在啟動', 'composing':'正在合併圖�
         'importing':'Blender 正在匯入模型', 'connecting':'官方 Sync 正在處理模型／材質並連接 D5',
         'sending':'官方 Sync 正在處理及傳送模型／材質', 'waiting_d5':'等待 D5 完成目前工作',
         'checkpointing':'正在保存本輪同步識別', 'analyzing':'正在辨識重複模型',
-        'transforming':'正在套用快速位置更新','updating_local':'正在局部更新群組／材質',
+        'transforming':'正在套用快速位置更新','updating_visibility':'正在更新圖層顯示','updating_local':'正在局部更新群組／材質',
         'need_full':'正在改用完整同步', 'idle':'等待背景程序接收本輪快照'}
 
 
@@ -62,7 +62,7 @@ class StatusModel:
             return result('active','準備同步…','正在準備啟動同步與檢查環境',True)
         if not alive and running:
             return result('error','背景程序已結束','尚未取得本輪成功回報，請查看詳細紀錄。')
-        if phase=='error':
+        if phase in ('error','material_conflict'):
             return result('error','同步失敗',state.get('message') or '背景程序回報錯誤。')
         if exporting:
             return result('active','同步中…','IngeTrazo 正在匯出模型快照',True,
@@ -80,8 +80,8 @@ class StatusModel:
             if state.get('bridge_backup_warning'):
                 return result('waiting','同步完成，備份未完成',
                               '本輪已收到成功回報，但新的橋接還原點尚未完成。',
-                              note='請檢查備份錯誤；後續更新會先重試備份。'+str(state['bridge_backup_warning']))
-            suffix='有新的修改待更新。' if dirty else '等待下一次修改。'
+                              note='請檢查磁碟與備份錯誤，未完成工作會保留並重試。'+str(state['bridge_backup_warning']))
+            suffix=('背景備份處理中；同步不等待備份複製。' if state.get('backup_in_progress') else '')+('有新的修改待更新。' if dirty else '等待下一次修改。')
             if paused:
                 return result('paused','已暫停','本輪同步已完成；後續更新已暫停。',note=suffix+' D5 畫面與材質仍需確認。')
             return result('success','同步完成','已收到第 '+str(revision)+' 版的成功回報。',
