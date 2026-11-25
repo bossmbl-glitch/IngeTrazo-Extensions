@@ -1,0 +1,47 @@
+PASS test_geometry.py
+PASS test_v08.py
+PASS test_v09.py
+PASS test_v10.py
+PASS test_v11.py
+PASS test_v12.py
+PASS test_v13.py
+PASS test_v14.py
+PASS test_v15.py
+PASS test_v16.py
+SKIP test_v17.py：缺少歷史 v1.6 ZIP
+PASS test_v18.py
+PASS test_v181.py
+PASS test_v182.py
+PASS test_v19.py
+PASS test_v20.py
+PASS test_v201.py
+PASS test_v202.py
+PASS test_v203.py
+PASS test_v204.py
+PASS test_v205.py
+PASS test_v206.py
+PASS test_v210_mouse_geometry.py
+PASS test_v211_preferences.py
+PASS test_v213_experimental.py
+PASS test_v214_wall_aligned.py
+PASS test_v215_horizontal.py
+PASS test_v216_wall_frame.py
+PASS test_v220_dialog.py
+PASS test_v220_dpi.py
+PASS test_v220_integration.py
+PASS test_v221_stamp_face.py
+PASS test_v222_clean_edges.py
+PASS test_v223_float_precision.py
+PASS test_v224_temporary.py
+PASS test_v225_direction_preview.py
+
+PASS Qt scale 1 / 1.5 / 2：新版壁板座標、面板及附圖整合測試。
+PASS 原始碼語法解析與核心 AST 比對。
+測試環境：Linux / Python 3.12 / PySide6 6.12.0 / QT_QPA_PLATFORM=offscreen。
+核心來源：IngeTrazo 0.6.0 e61132a7f8a098ca77fb6b0e7cac488c1bd410cb。
+附圖實際使用生產 build_mesh／recipe_faces 計算；不向場景／History 提交。
+已測九個基準點與24組新壁板配置，保留96組舊壁板與既有踢腳回歸。
+測試剖面為內建與代表性不對稱剖面，不宣稱取得或重現使用者自訂066原始幾何。
+Windows 真實吸附、OpenGL顯示、實際066與大型專案尚待使用者驗收。
+原 sweep_faces、experimental_sweep_faces、mesh_ready_faces、edge_display_rules、apply_edge_display、_mesh_vertex_key、_mesh_edge_key、ordered_paths 與v2.2.4正式包AST一致。
+尚未提交、推送或發布GitHub；正式基準仍為v2.2.4。

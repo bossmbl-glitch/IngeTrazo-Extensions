@@ -20,7 +20,7 @@
 
 | ID | 名稱 | 開發紀錄 | 待辦 |
 |---|---|---|---|
-| 01 | Profile Builder 快速輪廓生成器 | v2.2.4 正式版，使用者已驗收 | [版本與測試紀錄](../01_ProfileBuilder/README.md) |
+| 01 | Profile Builder 快速輪廓生成器 | v2.2.5 正式版 | [版本與測試紀錄](../01_ProfileBuilder/README.md) |
 | 02 | Cabinet Builder 參數櫃體 | 多版本開發 | 統一功能及版本 |
 | 03 | XYZ Rotation 旋轉工具 | 新版已要求實作 | 核對方向鍵及軸向 |
 | 04 | FFD 2×2／3×3 | 已開發 | 修正未選點位移、幾何變形 |
@@ -45,7 +45,7 @@
 
 ### Profile Builder
 
-目前正式版為 v2.2.4，已驗收。以下為歷史關注項目，不代表全部仍為未修正問題；最新限制與測試見 `01_ProfileBuilder/KNOWN_ISSUES.md` 及 `TEST_REPORT.md`。
+目前正式版為 v2.2.5。以下為歷史關注項目，不代表全部仍為未修正問題；最新限制與測試見 `01_ProfileBuilder/KNOWN_ISSUES.md` 及 `TEST_REPORT.md`。
 - 巢狀群組及跨越外框
 - 交叉幾何及部分重疊
 - 線板多餘線段

@@ -1,0 +1,12 @@
+外掛名稱：快速輪廓生成器（Windows／IngeTrazo0.6.0／Python）。
+功能名稱：路徑直線倒角／圓角。
+原版本：v2.2.5 Test4；正式基準v2.2.4。
+新版本：v2.2.5 Test5，待驗收測試包。
+修改內容：選一個轉角後以cm預覽等距倒角或相切取樣圓弧，套用至工作路徑，完成再重建模型。
+主要影響檔案：path_corners.py新增計算與交易式預覽；path_editor_direct.py加入節點入口、候選顯示與生命週期清理；path_editor.py僅加預覽節點標記控制；__init__.py測試版字串；新增test_v225_path_corners.py及版本文件。
+測試結果：39支通過、1支略過；詳細見同包驗證結果_v2.2.5_Test5.txt。
+未驗證項目：Windows真實吸附／OpenGL與大型專案效能。
+已知問題：圓角為2至64段折線，一次一角；不含實體碰撞檢查。詳見CHANGELOG_v225_test5.txt。
+GitHub分支與Commit：本地work，基準HEAD ad4cc75，檔案尚未提交；未切分支、推送或更新遠端main／develop。
+安裝包：Lime_Quick_Profile_IngeTrazo_v2.2.5_Test5.zip。
+發布狀態：本地測試包，未正式發布。

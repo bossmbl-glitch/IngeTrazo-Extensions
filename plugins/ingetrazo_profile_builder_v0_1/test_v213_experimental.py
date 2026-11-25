@@ -28,6 +28,8 @@ panel=classes['ProfilePanel']; method=lambda name:next(x for x in panel.body if 
 # v2.2.0 removes the experimental UI; retain geometry regressions above.
 assert not any(isinstance(x,ast.FunctionDef) and x.name=='activate_experimental_draw' for x in panel.body)
 assert 'experimental_button' not in source
-assert 'experimental_sweep_faces if experimental else sweep_faces' in ast.get_source_segment(source,method('_produce'))
+# Production dispatch now handles the versioned wall layout; the legacy
+# sweep itself is unchanged and covered by the v2.2.0 AST regression.
+assert 'experimental_sweep_faces if experimental else profile_sweep_faces' in ast.get_source_segment(source,method('_produce'))
 assert 'viewport.set_active_tool(ProfileDrawTool())' in ast.get_source_segment(source,method('activate_draw'))
 print('PASS v2.1.3 experimental 3D bends, continuity, baseline isolation')

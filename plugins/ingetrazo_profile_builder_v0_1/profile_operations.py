@@ -38,14 +38,14 @@ def merged_recipe(old, current, fields):
 
 
 def recipe_faces(recipe):
-    from . import sweep_faces,experimental_sweep_faces
+    from . import profile_sweep_faces,experimental_sweep_faces
     opts=dict(recipe['settings'])
     # Whitelist: future/foreign metadata must not become executable kwargs.
-    allowed={'horizontal','fixed_side','wall_frame','wall_depth_sign','plane_normal_override'}
+    allowed={'horizontal','fixed_side','wall_frame','wall_depth_sign','plane_normal_override','wall_section_layout'}
     opts.update({k:v for k,v in recipe.get('mouse_orientation',{}).items() if k in allowed})
     if recipe.get('kind')=='stamp':
         return [stamp_polygon(recipe['section'],recipe['settings'],recipe['origin'],recipe['normal'])]
-    func=experimental_sweep_faces if recipe.get('experimental') else sweep_faces
+    func=experimental_sweep_faces if recipe.get('experimental') else profile_sweep_faces
     if recipe.get('experimental') and 'plane_normal_override' in opts:
         opts['wall_normal']=opts.pop('plane_normal_override')
         opts.pop('wall_frame',None);opts.pop('wall_depth_sign',None)

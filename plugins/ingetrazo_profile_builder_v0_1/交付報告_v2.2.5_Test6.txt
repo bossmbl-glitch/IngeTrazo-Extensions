@@ -1,0 +1,12 @@
+外掛名稱：快速輪廓生成器（Windows／IngeTrazo0.6.0／Python）。
+功能名稱：整合前述1～16項路徑編輯優化。
+原版本：v2.2.5 Test5；正式基準v2.2.4。
+新版本：v2.2.5 Test6，待驗收測試包。
+修改內容：拖曳距離與數字輸入、高亮、尺寸避讓、前後對照、錯誤復原、長路徑簡化預覽、退出選擇、平面90度／節點吸附、持久鎖點、保留倒角圓角、當前路徑斷開接合、獨立副本、固定點整框寬高、等距分點。詳見功能對照_1-16_v2.2.5_Test6.txt。
+影響檔案：path_aid_session.py與path_aids.py新增；path_editor.py切換新入口；path_editor_direct.py保留可更新工具列標題；path_editor_enhancements.py連續套用使用相同Session型別；__init__.py測試版字串；新增test_v225_path_aids.py並更新原路徑測試的退出選擇注入；版本文件。
+測試結果：40支完整腳本通過、1支缺歷史v1.6 ZIP略過；單位、退出防護與邊線另做針對性驗證。
+未驗證項目：Windows真實滑鼠與吸附、OpenGL及大型專案效能。
+已知限制：單一路徑斷開接合；整框與輔助吸附須有工作平面；原生切換工具仍直接放棄未提交內容；其他限制見CHANGELOG_v225_test6.txt。
+GitHub分支與Commit：本地work，基準HEAD ad4cc75，修改未提交。未切分支／推送或更新遠端main／develop。
+安裝包：Lime_Quick_Profile_IngeTrazo_v2.2.5_Test6.zip。
+發布狀態：本地測試包，未正式發布。

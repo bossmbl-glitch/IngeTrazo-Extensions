@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Quick Profile 2.2.4 — standalone IngeTrazo 0.6.0 extension.
+"""Quick Profile 2.2.5 Release — standalone IngeTrazo 0.6.0 extension.
 
 Geometry uses metres internally. Install this package directory in the per-user plugins folder.
 Scene geometry is committed only on generation or finishing a drawn path.
@@ -362,6 +362,15 @@ def sweep_faces(path, section, closed=False, width_mm=17, height_mm=17,
         faces.append(list(rings[-1]))
     return faces
 
+
+
+def profile_sweep_faces(path, section, closed=False, **options):
+    """Versioned wall layout; absent metadata retains v2.2.4 geometry exactly."""
+    upright=options.pop('wall_section_layout',False)
+    if upright and options.get('wall_frame'):
+        from .direction_preview import wall_panel_sweep_faces
+        return wall_panel_sweep_faces(path,section,closed,**options)
+    return sweep_faces(path,section,closed,**options)
 
 
 def experimental_sweep_faces(path, section, closed=False, width_mm=17, height_mm=17,
@@ -815,6 +824,7 @@ class ProfilePreview(QWidget):
         super().__init__(parent)
         self.points=PRESETS["058｜弧形線板"]
         self.anchor="左上"; self.mirror=False; self.rotation=0.
+        self.wall_application=None
         self.setMinimumHeight(145)
     def set_points(self,pts): self.points=pts; self.update()
     def set_orientation(self, anchor=None, mirror=None, rotation=None):
@@ -844,6 +854,9 @@ class ProfilePreview(QWidget):
             if self.mirror: u=-u
             return (u*cos-v*sin, u*sin+v*cos)
         poly=[transform(x,y) for x,y in pts]
+        if self.wall_application is not None:
+            from .direction_preview import wall_panel_preview_points
+            poly=wall_panel_preview_points(pts,self.wall_application)
         anchor_x,anchor_y=0.,0.
         # Keep red point visible even when the cross section rotates.
         xx=[a for a,b in poly]+[anchor_x]; yy=[b for a,b in poly]+[anchor_y]
@@ -904,9 +917,9 @@ class ProfilePanel(QWidget):
         self._active_profile_key = None
         self._restoring_profile_preferences = False
         self._profile_preferences = self._load_profile_preferences()
-        self.setWindowTitle("輪廓外形面板 v2.2.4｜IngeTrazo")
-        self.setMinimumSize(430, 600)
-        self.resize(445, 710)
+        self.setWindowTitle("輪廓外形面板 v2.2.5 正式版｜IngeTrazo")
+        self.setMinimumSize(490, 720)
+        self.resize(530, 780)
         self.setStyleSheet("""
             QWidget { font-size: 12px; }
             QToolButton { min-width: 24px; min-height: 24px; padding: 2px; }
@@ -944,21 +957,27 @@ class ProfilePanel(QWidget):
         upper = QHBoxLayout()
         upper.setSpacing(7)
         self.preview = ProfilePreview()
-        self.preview.setFixedSize(147, 147)
+        self.preview.setFixedSize(147, 190)
         self.preview.setStyleSheet('border: 1px solid #999999;')
         upper.addWidget(self.preview, 0, Qt.AlignTop)
 
-        right = QVBoxLayout()
-        right.setSpacing(4)
+        from .direction_preview import DirectionPreview
+        self.generation_preview=DirectionPreview(self)
+        self.generation_preview.setFixedHeight(190)
+        upper.addWidget(self.generation_preview,1)
+        lay.addLayout(upper)
+        right = QGridLayout()
+        right.setHorizontalSpacing(12)
+        right.setVerticalSpacing(4)
         self.anchor = QComboBox()
         self.anchor.addItems(('左上', '上中', '右上', '左中', '中心', '右中', '左下', '下中', '右下'))
-        right.addWidget(self.anchor)
+        right.addWidget(self.named_spin('基準點',self.anchor),0,0)
         self.anchor.currentTextChanged.connect(lambda v: self.preview.set_orientation(anchor=v))
         self.rotation = self.spin(0, -360, 360)
-        right.addWidget(self.named_spin('旋轉', self.rotation))
+        right.addWidget(self.named_spin('旋轉', self.rotation),0,1)
         self.rotation.valueChanged.connect(lambda v: self.preview.set_orientation(rotation=v))
         self.mirror = QCheckBox('鏡像剖面')
-        right.addWidget(self.mirror)
+        right.addWidget(self.mirror,1,0)
         self.mirror.toggled.connect(lambda v: self.preview.set_orientation(mirror=v))
         self.reverse_depth = QCheckBox('垂直路徑：反轉剖面正反面')
         self.reverse_depth.setChecked(True)
@@ -966,11 +985,9 @@ class ProfilePanel(QWidget):
         # Advanced orientation flag is managed from the bottom settings menu.
         self.offsetu = self.spin(0, -100000, 100000)
         self.offsetv = self.spin(0, -100000, 100000)
-        right.addWidget(self.named_spin('水平偏移', self.offsetu))
-        right.addWidget(self.named_spin('垂直偏移', self.offsetv))
-        right.addStretch(1)
-        upper.addLayout(right, 1)
-        lay.addLayout(upper)
+        right.addWidget(self.named_spin('水平偏移', self.offsetu),1,1)
+        right.addWidget(self.named_spin('垂直偏移', self.offsetv),2,1)
+        lay.addLayout(right)
 
         lay.addWidget(self.heading('屬性'))
         self.rule(lay)
@@ -1047,10 +1064,14 @@ class ProfilePanel(QWidget):
         orientation_row = QHBoxLayout()
         orientation_row.addWidget(QLabel('滑鼠方向'))
         self.mouse_orientation = QComboBox()
-        self.mouse_orientation.addItems(['水平踢腳（高度沿 Z）', '牆面線板（固定牆面）', '空間路徑（原方式）'])
+        self.mouse_orientation.addItems(['水平踢腳（高度沿 Z）', '牆面壁板（固定牆面）', '空間路徑（原方式）'])
         self.mouse_orientation.setToolTip('水平踢腳：F 反向。牆面線板：F 切換線板側、R 切換凸出面；無面吸附且垂直起筆時，第二點前按 Tab 選牆向。模式在起筆時固定。')
         orientation_row.addWidget(self.mouse_orientation, 1)
         lay.addLayout(orientation_row)
+        self.path_edit_button=QPushButton('編輯路徑')
+        self.path_edit_button.setToolTip('選取一個既有線板，編輯生成路徑的節點；完成後重建，可復原。')
+        self.path_edit_button.clicked.connect(self.activate_path_edit)
+        lay.addWidget(self.path_edit_button)
         lay.addStretch(1)
         self.rule(lay)
         footer = QHBoxLayout()
@@ -1077,6 +1098,34 @@ class ProfilePanel(QWidget):
         lay.addLayout(footer)
         self.setToolTip('操作圖示可將滑鼠移入查看繁體中文說明')
         self.restore_last_used_state()
+        for control in (self.width,self.height,self.rotation,self.offsetu,self.offsetv):
+            control.valueChanged.connect(self.refresh_generation_preview)
+        for control in (self.anchor,self.closed_side):
+            control.currentTextChanged.connect(self.refresh_generation_preview)
+        for control in (self.mirror,self.miter,self.reverse_depth):
+            control.toggled.connect(self.refresh_generation_preview)
+        self.mouse_orientation.currentIndexChanged.connect(self.refresh_generation_preview)
+        self.refresh_generation_preview()
+
+    def refresh_generation_preview(self, *_):
+        """Illustrate current settings without touching the scene or history."""
+        if not hasattr(self,'generation_preview') or not hasattr(self,'mouse_orientation'):
+            return
+        section=self.profiles.get(self.profile.currentText())
+        if not section:return
+        mode=self.mouse_orientation.currentIndex()
+        side=1.;depth=1.
+        tool=getattr(self.app.viewport,'active_tool',None)
+        if isinstance(tool,ProfileDrawTool):
+            if tool._is_wall():
+                mode=1;side=tool._wall_side;depth=tool._wall_depth_sign
+            elif tool._is_horizontal():
+                mode=0;side=tool._mouse_orientation_options()['fixed_side']
+            else:mode=2
+        options=self.opts()
+        self.preview.wall_application=dict(options,fixed_side=side,wall_depth_sign=depth) if mode==1 else None
+        self.preview.update()
+        self.generation_preview.set_example(section,options,mode,side,depth)
 
     def tool(self, glyph, tip, callback=None, checkable=False):
         btn = QToolButton(self)
@@ -1169,6 +1218,10 @@ class ProfilePanel(QWidget):
     def showEvent(self,event):
         super().showEvent(event)
         self.refresh_scene_options()
+
+    def activate_path_edit(self):
+        from .path_editor import activate_path_edit
+        activate_path_edit(self)
 
     def edit_selected_profiles(self):
         from .profile_operations import edit_selected_profiles
@@ -1265,6 +1318,10 @@ class ProfilePanel(QWidget):
         """Explicit finish button for users who prefer not to press a key."""
         viewport=self.app.viewport
         tool=getattr(viewport, 'active_tool', None)
+        from .path_editor import ProfilePathEditTool
+        if isinstance(tool,ProfilePathEditTool):
+            tool.finish()
+            return
         if not isinstance(tool, ProfileDrawTool):
             viewport.flash_status('請先使用左下角繪製工具選取至少兩個點。', 3000)
             return
@@ -1377,6 +1434,9 @@ class ProfilePanel(QWidget):
                     self._apply_saved_options(saved)
                 else:
                     self._reset_profile_options()
+
+        if hasattr(self,'refresh_generation_preview'):
+            self.refresh_generation_preview()
 
     def select_profile_by_name(self):
         term = self.profile_name.text().strip()
@@ -1820,7 +1880,7 @@ class ProfilePanel(QWidget):
                     sweep_options.update(mouse_orientation)
                 if experimental:
                     sweep_options['wall_normal']=wall_normal
-                raw_polygons = (experimental_sweep_faces if experimental else sweep_faces)(pts, section, closed,
+                raw_polygons = (experimental_sweep_faces if experimental else profile_sweep_faces)(pts, section, closed,
                                            preview_side=(mouse_draw and not closed),
                                            stable_mouse_plane=mouse_draw,
                                            **sweep_options)
@@ -2196,10 +2256,12 @@ class ProfileDrawTool(Tool):
         self._manual_side = 1.0
         self._start_face_normal = None
         self._side_locked = False
-        viewport.flash_status('輪廓 v2.2.4：左鍵選點、Space／Enter 完成；F 換側；牆面模式 R 換凸出面、Esc 取消', 6000)
+        viewport.flash_status('輪廓 v2.2.5 正式版：左鍵選點、Space／Enter 完成；F 換側；牆面模式 R 換凸出面、Esc 取消', 6000)
 
     def on_deactivate(self, viewport):
         self._clear()
+        if _WINDOW is not None and hasattr(_WINDOW,'refresh_generation_preview'):
+            _WINDOW.refresh_generation_preview()
 
     def _clear(self):
         self.path = []
@@ -2256,9 +2318,14 @@ class ProfileDrawTool(Tool):
 
     def _mouse_orientation_options(self):
         if self._is_wall():
-            return dict(wall_frame=True,
-                        plane_normal_override=self._wall_plane_for(self._preview_points()),
-                        fixed_side=self._wall_side, wall_depth_sign=self._wall_depth_sign)
+            normal=self._wall_plane_for(self._preview_points())
+            # Keep the illustrated left/right side independent of the sign
+            # of a picked face normal. R controls protrusion independently.
+            preferred=(0.,-1.,0.) if abs(normal[1])>=abs(normal[0]) else (1.,0.,0.)
+            polarity=1. if v_dot(normal,preferred)>=0 else -1.
+            return dict(wall_frame=True,wall_section_layout=True,
+                        plane_normal_override=normal,
+                        fixed_side=self._wall_side*polarity, wall_depth_sign=self._wall_depth_sign)
         side = (self._horizontal_side if self._side_locked else
                 self._choose_horizontal_side(self._preview_points()))
         return dict(horizontal=self._is_horizontal(), fixed_side=side)
@@ -2430,6 +2497,8 @@ class ProfileDrawTool(Tool):
 
     def on_cancel(self, viewport):
         self._clear()
+        if _WINDOW is not None and hasattr(_WINDOW,'refresh_generation_preview'):
+            _WINDOW.refresh_generation_preview()
         viewport.update()
 
     def status_clause(self):
@@ -2448,6 +2517,8 @@ class ProfileDrawTool(Tool):
         return points
 
     def _refresh_preview(self):
+        if _WINDOW is not None and hasattr(_WINDOW,'refresh_generation_preview'):
+            _WINDOW.refresh_generation_preview()
         self._preview_mesh = None
         self._preview_segments = []
         self._preview_error = None
@@ -2459,7 +2530,7 @@ class ProfileDrawTool(Tool):
             if not section:
                 return
             closed = len(self.path) >= 3 and self.hover is not None and self._near_start(self.hover)
-            raw_polygons = sweep_faces(
+            raw_polygons = profile_sweep_faces(
                 points, section, closed, preview_side=not closed,
                 side_hint_path=self.path if len(self.path) >= 3 else None,
                 stable_mouse_plane=True, **self._mouse_orientation_options(), **_WINDOW.opts())

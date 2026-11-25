@@ -66,3 +66,5 @@ For IntegratedTools, read the corresponding features/ subdirectory before editin
 Always update the relevant CHANGELOG.md after code changes.
 
 Never mark an extension as officially released without user approval and application-level verification.
+
+每個子專案發布正式版時，須在該專案目錄的 CHANGELOG 與該版發布資料夾記錄從上一個正式版到本版的完整累積變更，涵蓋期間所有測試版，註明最終操作方式、修正、相容性、限制及驗證結果。安裝包與發布說明須提供同一份紀錄。
