@@ -1,0 +1,57 @@
+name: Update Toolbox 1.0.0 release notes
+on:
+  push:
+    branches: [develop]
+    paths:
+      - '02_CabinetBuilder/releases/1.0.0/RELEASE_NOTES.md'
+      - '.github/workflows/toolbox-release-notes-1.0.0.yml'
+permissions:
+  contents: write
+concurrency:
+  group: toolbox-1.0.0-release-notes
+  cancel-in-progress: false
+jobs:
+  notes:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update approved text and verify release assets are unchanged
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/releases/tags/toolbox-v1.0.0" > /tmp/toolbox-before.json
+          gh api "repos/$GH_REPO/git/ref/tags/toolbox-v1.0.0" > /tmp/toolbox-tag-before.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          release=json.loads(Path('/tmp/toolbox-before.json').read_text())
+          tag=json.loads(Path('/tmp/toolbox-tag-before.json').read_text())
+          assert release['id']==457539851 and not release['draft'] and not release['prerelease']
+          assert tag['object']['sha']=='d471df4e4c52b7fe91d65f81f2daff305c7cf335'
+          archive=next(a for a in release['assets'] if a['name']=='Lime-Integrated-Toolbox-1.0.0.zip')
+          assert archive['digest']=='sha256:6ddf187b4148eceef5e6f9a5f848d5b052f25456dfaa5ccf16e5274e4fed6aac'
+          notes=Path('02_CabinetBuilder/releases/1.0.0/RELEASE_NOTES.md').read_text()
+          assert notes.count('<details>')==notes.count('</details>')==notes.count('<summary>')==9
+          assert '<details open' not in notes
+          PY
+          gh release edit toolbox-v1.0.0 --notes-file 02_CabinetBuilder/releases/1.0.0/RELEASE_NOTES.md
+          gh api "repos/$GH_REPO/releases/tags/toolbox-v1.0.0" > /tmp/toolbox-after.json
+          gh api "repos/$GH_REPO/git/ref/tags/toolbox-v1.0.0" > /tmp/toolbox-tag-after.json
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          before=json.loads(Path('/tmp/toolbox-before.json').read_text())
+          after=json.loads(Path('/tmp/toolbox-after.json').read_text())
+          notes=Path('02_CabinetBuilder/releases/1.0.0/RELEASE_NOTES.md').read_text()
+          assert after['body'].strip()==notes.strip()
+          for key in ('id','tag_name','name','draft','prerelease','target_commitish'):
+              assert before[key]==after[key],key
+          def assets(r):return [(a['id'],a['name'],a['size'],a['digest']) for a in r['assets']]
+          assert assets(before)==assets(after)
+          assert Path('/tmp/toolbox-tag-before.json').read_text()==Path('/tmp/toolbox-tag-after.json').read_text()
+          print('Verified nine collapsed sections; release tag and all assets unchanged.')
+          PY
