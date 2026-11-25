@@ -1,0 +1,30 @@
+name: Publish Quick Profile 2.2.5
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/profile-builder-release-2.2.5.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: profile-builder-release-2.2.5
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/profile-builder-v2.2.5
+      - name: Verify and publish tagged installer and cumulative notes
+        working-directory: 01_ProfileBuilder/releases/v2.2.5
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -eu
+          sha256sum --check SHA256SUMS.txt
+          tag=profile-builder-v2.2.5
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" Lime_Quick_Profile_IngeTrazo_v2.2.5_Release.zip SHA256SUMS.txt --verify-tag --title '快速輪廓生成器 v2.2.5' --notes-file CHANGELOG.md
+          fi
+          gh release view "$tag" --json isDraft,assets --jq 'select(.isDraft == false) | .assets[].name' | grep -Fx Lime_Quick_Profile_IngeTrazo_v2.2.5_Release.zip
