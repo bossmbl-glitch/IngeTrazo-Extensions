@@ -2,7 +2,7 @@ name: Publish Quick Profile 2.2.5
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/profile-builder-release-2.2.5.yml']
+    paths: ['01_ProfileBuilder/releases/v2.2.5/RELEASE_NOTES.md', '.github/workflows/profile-builder-release-2.2.5.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -15,6 +15,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: refs/tags/profile-builder-v2.2.5
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: approved
       - name: Verify and publish tagged installer and cumulative notes
         working-directory: 01_ProfileBuilder/releases/v2.2.5
         env:
@@ -24,7 +28,10 @@ jobs:
           set -eu
           sha256sum --check SHA256SUMS.txt
           tag=profile-builder-v2.2.5
+          notes="$GITHUB_WORKSPACE/approved/01_ProfileBuilder/releases/v2.2.5/RELEASE_NOTES.md"
           if ! gh release view "$tag" >/dev/null 2>&1; then
-            gh release create "$tag" Lime_Quick_Profile_IngeTrazo_v2.2.5_Release.zip SHA256SUMS.txt --verify-tag --title '快速輪廓生成器 v2.2.5' --notes-file CHANGELOG.md
+            gh release create "$tag" Lime_Quick_Profile_IngeTrazo_v2.2.5_Release.zip SHA256SUMS.txt --verify-tag --title '快速輪廓生成器 v2.2.5' --notes-file "$notes"
+          else
+            gh release edit "$tag" --notes-file "$notes"
           fi
           gh release view "$tag" --json isDraft,assets --jq 'select(.isDraft == false) | .assets[].name' | grep -Fx Lime_Quick_Profile_IngeTrazo_v2.2.5_Release.zip
