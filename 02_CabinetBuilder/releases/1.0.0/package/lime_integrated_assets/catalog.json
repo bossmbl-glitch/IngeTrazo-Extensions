@@ -1,0 +1,142 @@
+[
+  {
+    "id": "cabinet",
+    "title": "參數櫃體",
+    "category": "門片與櫃體",
+    "description": "新增、讀取修改及量體轉換；素框玻璃門與層板分格",
+    "icon": "tool_cabinet.png"
+  },
+  {
+    "id": "door_new",
+    "title": "門片／門組",
+    "category": "門片與櫃體",
+    "description": "造型門、玻璃門、百葉門與外框；新增及修改共用視窗",
+    "icon": "tool_door_group.svg"
+  },
+  {
+    "id": "window",
+    "title": "窗戶／窗組",
+    "category": "門片與櫃體",
+    "description": "六款原型窗、自訂橫拉／固定／平開窗；框料分格、窗台高度與量體轉換",
+    "icon": "tool_window.svg"
+  },
+  {
+    "id": "panel_place",
+    "title": "開關／插座面板",
+    "category": "門片與櫃體",
+    "description": "選資料庫模型，保持原尺寸；量體定位或點牆放置，預設中心高 120 cm",
+    "icon": "tool_panel.svg"
+  },
+  {
+    "id": "profile_library",
+    "title": "配件資料庫",
+    "category": "門片與櫃體",
+    "description": "線板剖面、把手與開關／插座面板；統一收錄、預覽、選用及備份",
+    "icon": "tool_profile_library.png"
+  },
+  {
+    "id": "cad_height",
+    "title": "CAD 圖層長高度",
+    "category": "試驗中",
+    "description": "依 CAD 圖層從封閉線框產生立體",
+    "icon": "tool_cad_height.png"
+  },
+  {
+    "id": "resize",
+    "title": "調整面／物件高度",
+    "category": "試驗中",
+    "description": "水平面調整標高；整個物件調整本身高度",
+    "icon": "tool_resize.png"
+  },
+  {
+    "id": "clearance",
+    "title": "物件離地高度",
+    "category": "高度與地板",
+    "description": "量測底部、頂部、中心高度，或垂直移動物件",
+    "icon": "tool_clearance.png"
+  },
+  {
+    "id": "floor",
+    "title": "產生輪廓地板",
+    "category": "試驗中",
+    "description": "依選取模型的最外圍輪廓產生地板",
+    "icon": "tool_floor.png"
+  },
+  {
+    "id": "center_object",
+    "title": "整體置中",
+    "category": "對齊與造型",
+    "description": "先選取要移動的物件，再點目標表面",
+    "icon": "tool_center_object.png"
+  },
+  {
+    "id": "center_face",
+    "title": "面置中",
+    "category": "對齊與造型",
+    "description": "以點選單一面的外框計算中心",
+    "icon": "tool_center_face.png"
+  },
+  {
+    "id": "ffd",
+    "title": "FFD 自由變形",
+    "category": "對齊與造型",
+    "description": "控制框 2×2×2／3×3×3，含鎖點與高面數模式",
+    "icon": "tool_ffd.png"
+  },
+  {
+    "id": "lathe",
+    "title": "Lathe 旋轉成形",
+    "category": "對齊與造型",
+    "description": "先選剖面線，設定旋轉軸並即時預覽",
+    "icon": "tool_lathe.png"
+  },
+  {
+    "id": "paint",
+    "title": "群組上色",
+    "category": "材質與匯出",
+    "description": "對選取群組上材質或使用隨機顏色",
+    "icon": "tool_paint.png"
+  },
+  {
+    "id": "export",
+    "title": "元件批次匯出",
+    "category": "材質與匯出",
+    "description": "試驗：選取群組分別或合併匯出 IGZ／SKP，保留原模型",
+    "icon": "tool_export.png"
+  },
+  {
+    "id": "cabinet_composite",
+    "title": "組合櫃",
+    "category": "試驗中",
+    "description": "試驗：矩形多區分割，各區可選門片、抽屜或開放，共用 3 cm 隔板",
+    "icon": "tool_cabinet_composite.png"
+  },
+  {
+    "id": "ffd_snap",
+    "title": "FFD 表面吸附",
+    "category": "試驗中",
+    "description": "將未鎖定控制點吸附到其他模型表面，確認後才寫入",
+    "icon": "tool_ffd_snap.png"
+  },
+  {
+    "id": "legacy_handles",
+    "title": "舊把手批次轉入",
+    "category": "試驗中",
+    "description": "掃描 handles.json 與對應 SKP，預覽清單後批次轉入",
+    "icon": "tool_legacy_handles.png"
+  },
+  {
+    "id": "diagnostics",
+    "title": "匯出診斷包",
+    "category": "材質與匯出",
+    "description": "匯出工具箱操作、參數櫃體設定與錯誤紀錄，直接傳回開發對話",
+    "icon": "tool_diagnostics.svg"
+  },
+  {
+    "id": "optimize_handles",
+    "title": "最佳化現有把手",
+    "category": "門片與櫃體",
+    "description": "整理資料庫實體配件的相同模型，櫃體與各類門組都適用，可復原",
+    "icon": "tool_optimize.svg"
+  }
+]

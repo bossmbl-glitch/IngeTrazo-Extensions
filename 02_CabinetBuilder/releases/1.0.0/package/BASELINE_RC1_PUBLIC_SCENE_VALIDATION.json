@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0-rc1",
+  "source": "使用者公區檔案（未修改原檔）",
+  "load_seconds": 2.000943894003285,
+  "root_groups": 334,
+  "all_groups": 2414,
+  "cabinets": 64,
+  "optimization_prepare_seconds": 10.839009039998928,
+  "stats": {
+    "mesh_nodes": 104,
+    "unique_meshes_before": 85,
+    "unique_meshes_after": 27,
+    "unique_faces_before": 437403,
+    "unique_faces_after": 18953,
+    "reassigned_nodes": 104,
+    "locked_mesh_nodes_skipped": 0,
+    "skipped_reasons": {}
+  },
+  "geometry_transform_material_identical": true,
+  "undo_redo": true,
+  "save_seconds": 5.531769075998454,
+  "reopen_seconds": 1.2983607620044495,
+  "shared_data_persisted": true,
+  "unchanged_preview_median_ms": 1.5933484974084422,
+  "unchanged_preview_max_ms": 4.262902999471407
+}

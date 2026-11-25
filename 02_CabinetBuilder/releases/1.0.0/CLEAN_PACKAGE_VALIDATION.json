@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "manifest_files": 116,
+  "manifest_sha256": "passed",
+  "clean_extraction_import": "passed",
+  "rc1_example_read": "passed",
+  "automatic_drawer_height": "passed",
+  "same_cabinet_entry_single_and_multi": "passed",
+  "handle_only_dimensions_preserved": "passed",
+  "selection_preserved": "passed",
+  "undo_redo": "passed",
+  "safe_length_expression": "passed",
+  "scoped_material_with_history": "passed",
+  "custom_mount_ui_available": "passed",
+  "archive_sha256": "6ddf187b4148eceef5e6f9a5f848d5b052f25456dfaa5ccf16e5274e4fed6aac",
+  "test_environment": "Linux / Qt offscreen / IngeTrazo 0.6.0 core"
+}

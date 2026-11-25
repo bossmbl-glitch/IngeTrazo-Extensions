@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "release_date": "2026-11-25",
+  "user_authorized_release": true,
+  "base_candidate": "1.0.0-rc3",
+  "runtime_changes": "Entry version strings only; all runtime assets identical to rc3.",
+  "target": "IngeTrazo 0.6.0 / Windows x64",
+  "test_environment": "Linux / Qt offscreen / IngeTrazo 0.6.0 core",
+  "full_regression": {
+    "passed": 357,
+    "failed": 0,
+    "seconds": 190.45,
+    "warning": "Third-party anyio pytest API deprecation"
+  },
+  "windows_application_verified": false,
+  "powershell_installer_verified": false,
+  "candidate_public_scene_modified_cabinets": 31,
+  "candidate_public_scene_dimensions_and_positions_preserved": true,
+  "clean_package_validation": "See CLEAN_PACKAGE_VALIDATION.json alongside the source package.",
+  "full_regression_log_sha256": "aef61844d110dc6586b4d77c5148a55cfbdec6aa72c05e1f969fc12a9d3cc774"
+}

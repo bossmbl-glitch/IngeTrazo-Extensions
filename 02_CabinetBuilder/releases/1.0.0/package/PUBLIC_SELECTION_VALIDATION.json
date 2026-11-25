@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0-rc3",
+  "source": "公區原檔（未修改）",
+  "cabinet_count": 64,
+  "selection_count": 33,
+  "editable_count": 32,
+  "user_excluded_count": 1,
+  "modified_count": 31,
+  "intrinsic_or_open_excluded": 31,
+  "uneditable_skipped": 1,
+  "apply_seconds": 41.32725930099696,
+  "dimensions_styles_names_preserved": true,
+  "selection_preserved": true,
+  "undo_redo": true,
+  "history_steps": 1
+}

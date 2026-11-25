@@ -1,0 +1,44 @@
+name: Publish Lime Toolbox 1.0.0
+on:
+  push:
+    branches: [release/toolbox-v1.0.0]
+    paths:
+      - '02_CabinetBuilder/releases/1.0.0/release.json'
+      - '.github/workflows/toolbox-release-1.0.0.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: toolbox-release-1.0.0
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/release/toolbox-v1.0.0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify immutable sources and reproduce archive
+        run: python3 02_CabinetBuilder/releases/1.0.0/build_release.py --output dist
+      - name: Publish user-authorized version 1.0.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view toolbox-v1.0.0 >/dev/null 2>&1; then
+            mkdir existing
+            gh release download toolbox-v1.0.0 --dir existing --pattern 'Lime-Integrated-Toolbox-1.0.0.zip'
+            cmp dist/Lime-Integrated-Toolbox-1.0.0.zip existing/Lime-Integrated-Toolbox-1.0.0.zip
+            echo 'Identical release already exists; preserving its tag and assets.'
+            exit 0
+          fi
+          gh release create toolbox-v1.0.0 \
+            dist/Lime-Integrated-Toolbox-1.0.0.zip \
+            dist/Lime-Integrated-Toolbox-1.0.0.zip.sha256 \
+            --target "$GITHUB_SHA" \
+            --title '萊姆整合工具箱 1.0.0' \
+            --latest=false \
+            --notes-file 02_CabinetBuilder/releases/1.0.0/RELEASE_NOTES.md

@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "tag": "toolbox-v1.0.0",
+  "channel": "stable",
+  "release_date": "2026-11-25",
+  "user_authorized": true,
+  "archive": "Lime-Integrated-Toolbox-1.0.0.zip",
+  "zip_sha256": "6ddf187b4148eceef5e6f9a5f848d5b052f25456dfaa5ccf16e5274e4fed6aac",
+  "base_candidate": "1.0.0-rc3",
+  "windows_application_verified": false
+}
